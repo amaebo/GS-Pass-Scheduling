@@ -6,7 +6,7 @@ DB_PATH = os.path.join(BASE_DIR, "ground_system.db")
 SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
 
 
-def get_db(db_path: str | None = None) -> sqlite3.Connection:
+def db_connect(db_path: str | None = None) -> sqlite3.Connection:
     """
     Create and return a SQLite database connection.
     """
