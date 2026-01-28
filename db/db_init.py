@@ -1,35 +1,42 @@
-import sqlite3
 import os
+import sqlite3
 
-# simple paths so its easy to read
 BASE_DIR = os.path.dirname(__file__)
 DB_PATH = os.path.join(BASE_DIR, "ground_system.db")
 SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
 
 
-def get_db(db_path=None):
+def get_db(db_path: str | None = None) -> sqlite3.Connection:
     """
-    Returns a conn object to database
-    
-    :param db_path: Path to database file
+    Create and return a SQLite database connection.
     """
     path = db_path or DB_PATH
     conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row  # allows abiltity to access columns by name 
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 
 
-def init_db(db_path=None, schema_path=None):
+def init_db(
+    db_path: str | None = None,
+    schema_path: str | None = None
+) -> None:
     """
-    Initializes Database
+    Initialize the database schema.
+    """
+    db_file = db_path or DB_PATH
+    schema_file = schema_path or SCHEMA_PATH
 
-    :param db_path: Path to database file
-    :param schema_path: Path to database schema creation file
-    """
-    path = schema_path or SCHEMA_PATH
-    with open(path, "r") as f:
+    with open(schema_file, "r", encoding="utf-8") as f:
         schema_sql = f.read()
-    conn = get_db(db_path)
-    conn.executescript(schema_sql)
-    conn.commit()
-    conn.close()
+
+    conn = get_db(db_file)
+    try:
+        conn.execute("BEGIN;")
+        conn.executescript(schema_sql)
+        conn.commit()
+    except sqlite3.Error as e:
+        conn.rollback()
+        raise RuntimeError(f"Database initialization failed: {e}")
+    finally:
+        conn.close()
