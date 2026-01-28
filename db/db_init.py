@@ -32,7 +32,6 @@ def init_db(
 
     conn = get_db(db_file)
     try:
-        conn.execute("BEGIN;")
         conn.executescript(schema_sql)
         conn.commit()
     except sqlite3.Error as e:
