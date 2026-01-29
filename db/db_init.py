@@ -30,7 +30,7 @@ def init_db(
     with open(schema_file, "r", encoding="utf-8") as f:
         schema_sql = f.read()
 
-    conn = get_db(db_file)
+    conn = db_connect(db_file)
     try:
         conn.executescript(schema_sql)
         conn.commit()
