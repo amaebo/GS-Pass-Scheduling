@@ -2,7 +2,7 @@ PRAGMA foreign_keys = ON;
 -- Ground stations
 CREATE TABLE IF NOT EXISTS ground_stations (
     gs_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    gs_name TEXT NOT NULL,
+    gs_code TEXT NOT NULL UNIQUE,
     lat REAL NOT NULL,
     lon REAL NOT NULL,
     source TEXT NOT NULL,
@@ -103,4 +103,3 @@ CREATE INDEX IF NOT EXISTS idx_commands_by_reservation_time ON reservation_comma
 -- Enforce one reservation per pass
  CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_reservation_per_pass
  ON reservations (pass_id);
-
