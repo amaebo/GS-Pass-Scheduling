@@ -9,7 +9,9 @@ CREATE TABLE IF NOT EXISTS ground_stations (
     -- (MANUAL, AWS, SATNOGS etc.)
     status TEXT NOT NULL,
     -- (ACTIVE/INACTIVE)
-    date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE (lat, lon)
 );
 -- Satellites
 CREATE TABLE IF NOT EXISTS satellites (
