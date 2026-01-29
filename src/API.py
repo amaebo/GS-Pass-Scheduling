@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from db.satellites_db import insert_new_satellite
 
@@ -10,15 +10,25 @@ class Satellite(BaseModel):
     s_name: str = Field(..., min_length = 1)
 
 # Satellite Registraion 
-@app.post("/satellites/register")
+@app.post("/satellites/register", status_code=201)
 def register_satellite(satellite: Satellite ):
-
-    satellite_dict = satellite.model_dump()
-    res = insert_new_satellite(satellite_dict["norad_id"], satellite_dict["s_name"])
-
-    message = "Satellite registered" if res else "Failed to register satellite"
-
-    return {
+    try:
+        s_id = insert_new_satellite(satellite.norad_id, satellite.s_name)
+        message = "Satellite registered"
+        return {
         "msg": message,
-        "satellite": satellite_dict
-    }
+        "satellite": satellite.model_dump()
+        }
+    # handle duplicate entries 
+    except sqlite3.IntegrityError:
+        # UNIQUE constraint hit
+        raise HTTPException(
+            status_code=409,
+            detail= "Satellite already registered (duplicate NORAD ID)."
+        )
+    #handle other database errors 
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+    
