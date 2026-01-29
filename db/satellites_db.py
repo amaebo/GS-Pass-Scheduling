@@ -5,7 +5,7 @@ from db.db_init import db_connect
 def insert_new_satellite(norad_id: int, s_name: str) -> int:
     query = """
         INSERT INTO satellites (s_name, norad_id)
-        VALUES (?, ?)
+        VALUES (?, ?);
     """
 
     conn = db_connect()
