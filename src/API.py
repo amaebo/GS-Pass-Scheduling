@@ -2,10 +2,12 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import sqlite3
+import re
 #database querying 
 import db.satellites_db as sat_db
 import db.gs_db as gs_db
 
+GS_CODE_REGEX = r"^[A-Z][A-Z0-9_]{2,49}$"
 
 app = FastAPI()
 
@@ -15,7 +17,7 @@ class Satellite(BaseModel):
     s_name: str = Field(..., min_length = 1)
 
 class GroundStation(BaseModel):
-    gs_name: str = Field(..., min_length = 1)
+    gs_code: str = Field(min_length=3, max_length=50, pattern=GS_CODE_REGEX)
     lon: float
     lat: float
     
@@ -37,6 +39,7 @@ def register_satellite(satellite: Satellite ):
             status_code=409,
             detail= "Satellite already registered (duplicate NORAD ID)."
         )
+# Ground Station Registration 
 @app.post("/groundstations/register", status_code = 201)
 def register_gs(gs: GroundStation):
     try:
@@ -44,11 +47,11 @@ def register_gs(gs: GroundStation):
         lon = round(gs.lon,5)
         lat = round(gs.lat, 5)
         
-        gs_id = gs_db.insert_gs_manual(gs.gs_name, lon, lat)
+        gs_id = gs_db.insert_gs_manual(gs.gs_code, lon, lat)
         message = "Ground station registered"
         return{
         "msg": message,
-        "Ground Station": {"gs_name": gs.gs_name,
+        "Ground Station": {"gs_code": gs.gs_code,
                         "lon": lon,
                         "lat": lat}
         }
@@ -56,6 +59,6 @@ def register_gs(gs: GroundStation):
     except sqlite3.IntegrityError:
         raise HTTPException(
             status_code = 409,
-            detail = "Ground Station already registered (duplicate coordinates)."
+            detail = "Ground Station already registered (duplicate gs_code or coordinates)."
         )
     
