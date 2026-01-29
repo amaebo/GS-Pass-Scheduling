@@ -5,7 +5,7 @@
             "previewLimit": 50,
             "driver": "SQLite",
             "name": "Ground System (SQLite)",
-            "database": "db/ground_system.db"
+            "database": "data/ground_system.db"
         }
     ]
 }
