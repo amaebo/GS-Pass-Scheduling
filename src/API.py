@@ -2,6 +2,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from db.satellites_db import insert_new_satellite
+import sqlite3
 
 app = FastAPI()
 
@@ -26,9 +27,4 @@ def register_satellite(satellite: Satellite ):
             status_code=409,
             detail= "Satellite already registered (duplicate NORAD ID)."
         )
-    #handle other database errors 
-    except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-
     
