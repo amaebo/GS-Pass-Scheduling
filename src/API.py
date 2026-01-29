@@ -37,3 +37,25 @@ def register_satellite(satellite: Satellite ):
             status_code=409,
             detail= "Satellite already registered (duplicate NORAD ID)."
         )
+@app.post("/groundstations/register", status_code = 201)
+def register_gs(gs: GroundStation):
+    try:
+        #round to the nearest 
+        lon = round(gs.lon,5)
+        lat = round(gs.lat, 5)
+        
+        gs_id = gs_db.insert_gs_manual(gs.gs_name, lon, lat)
+        message = "Ground station registered"
+        return{
+        "msg": message,
+        "Ground Station": {"gs_name": gs.gs_name,
+                        "lon": lon,
+                        "lat": lat}
+        }
+    # handle duplicate entries 
+    except sqlite3.IntegrityError:
+        raise HTTPException(
+            status_code = 409,
+            detail = "Ground Station already registered (duplicate coordinates)."
+        )
+    
