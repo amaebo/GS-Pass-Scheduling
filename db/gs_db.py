@@ -11,6 +11,9 @@ def insert_gs_manual(gs_name: str, lon: float, lat: float):
     try:
         cur = conn.execute(query, gs_name, lon, lat)
         conn.commit()
-    except sqlite3.Error as e:
-        raise RuntimeError(f"Insert ground station failed: {e}")
-
+        return cur.lastrowid # return primary key of new row (s_id)
+    except sqlite3.Error:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
