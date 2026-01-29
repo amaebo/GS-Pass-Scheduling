@@ -1,9 +1,11 @@
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-from db.satellites_db import insert_new_satellite
-
 import sqlite3
+#database querying 
+import db.satellites_db as sat_db
+import db.gs_db as gs_db
+
 
 app = FastAPI()
 
@@ -13,15 +15,16 @@ class Satellite(BaseModel):
     s_name: str = Field(..., min_length = 1)
 
 class GroundStation(BaseModel):
+    gs_name: str = Field(..., min_length = 1)
     lon: float
     lat: float
-    gs_name: str = Field(..., min_length = 1)
+    
 
 # Satellite Registraion 
 @app.post("/satellites/register", status_code=201)
 def register_satellite(satellite: Satellite ):
     try:
-        s_id = insert_new_satellite(satellite.norad_id, satellite.s_name)
+        s_id = sat_db.insert_new_satellite(satellite.norad_id, satellite.s_name)
         message = "Satellite registered"
         return {
         "msg": message,
