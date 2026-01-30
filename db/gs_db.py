@@ -19,7 +19,7 @@ def insert_gs_manual(gs_code: str, lon: float, lat: float) -> int:
     finally:
         conn.close()
 
-def get_all_gs():
+def get_all_gs() -> sqlite3.Row:
     query= """
             SELECT *
             FROM ground_stations
