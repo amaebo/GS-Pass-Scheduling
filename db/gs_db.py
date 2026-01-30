@@ -18,3 +18,19 @@ def insert_gs_manual(gs_code: str, lon: float, lat: float) -> int:
         raise
     finally:
         conn.close()
+
+def get_all_gs():
+    query= """
+            SELECT *
+            FROM ground_stations
+    """
+    conn = db_connect
+    try:
+        cur = conn.execute(query)
+        rows = cur.fetchall()
+        conn.commit()
+    except sqlite3.Error:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
