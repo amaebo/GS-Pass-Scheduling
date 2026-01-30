@@ -25,7 +25,7 @@ INSERT INTO ground_stations (
     )
 VALUES (
         1,
-        'DEN-CO',
+        'DEN_CO',
         39.7392,
         -104.9903,
         'MANUAL',
@@ -34,7 +34,7 @@ VALUES (
     ),
     (
         2,
-        'BOU-CO',
+        'BOU_CO',
         40.01499,
         -105.27055,
         'MANUAL',
