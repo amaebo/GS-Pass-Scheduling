@@ -21,9 +21,21 @@ class GroundStation(BaseModel):
     lat: float
     
 #TODO: Implement list of satellite view 
-@app.get("/satellites")
+@app.get("/satellites/view")
 def list_satellites():
-    pass
+    try:
+        rows = sat_db.get_all_satellites()
+                
+        #convert rows to list of dictionaries (for json formatting)
+        list_of_rows = [dict(row) for row in rows]
+        return {
+            "satellites": list_of_rows
+            }
+    except sqlite3.Error:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve satellites."
+        )
 
 # Satellite Registraion 
 @app.post("/satellites/register", status_code=201)
@@ -53,8 +65,11 @@ def list_gs():
         return {
             "ground stations": list_of_rows
             }
-    except sqlite3.Error as e:
-        raise
+    except sqlite3.Error:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve ground stations."
+        )
 # Ground Station Registration 
 @app.post("/groundstations/register", status_code = 201)
 def register_gs(gs: GroundStation):

@@ -18,3 +18,20 @@ def insert_new_satellite(norad_id: int, s_name: str) -> int:
         raise
     finally:
         conn.close()
+
+def get_all_satellites():
+    query= """
+            SELECT *
+            FROM satellites
+    """
+    conn = db_connect()
+    try:
+        cur = conn.execute(query)
+        rows = cur.fetchall()
+        conn.commit()
+        return rows
+    except sqlite3.Error:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
