@@ -1,5 +1,7 @@
 PRAGMA foreign_keys = ON;
+-- =========================
 -- Ground stations
+-- =========================
 CREATE TABLE IF NOT EXISTS ground_stations (
     gs_id INTEGER PRIMARY KEY AUTOINCREMENT,
     gs_code TEXT NOT NULL UNIQUE,
@@ -10,10 +12,11 @@ CREATE TABLE IF NOT EXISTS ground_stations (
     status TEXT NOT NULL,
     -- (ACTIVE/INACTIVE)
     date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     UNIQUE (lat, lon)
 );
+-- =========================
 -- Satellites
+-- =========================
 CREATE TABLE IF NOT EXISTS satellites (
     s_id INTEGER PRIMARY KEY AUTOINCREMENT,
     s_name TEXT NOT NULL,
@@ -28,7 +31,9 @@ CREATE TABLE IF NOT EXISTS satellites (
     last_contact_time TIMESTAMP,
     date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+-- =========================
 -- Missions
+-- =========================
 CREATE TABLE IF NOT EXISTS missions (
     mission_id INTEGER PRIMARY KEY AUTOINCREMENT,
     mission_name TEXT NOT NULL,
@@ -37,18 +42,25 @@ CREATE TABLE IF NOT EXISTS missions (
     -- ("low" | "medium" | "high")
     date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+-- =========================
 -- Command catalog (lookup)
+-- =========================
 CREATE TABLE IF NOT EXISTS command_catalog (
     command_type TEXT PRIMARY KEY,
     description TEXT NOT NULL
 );
--- Predicted passes (cached)
+-- =========================
+-- Predicted passes (cached from N2YO/Skyfield)
+-- =========================
 CREATE TABLE IF NOT EXISTS predicted_passes (
     pass_id INTEGER PRIMARY KEY AUTOINCREMENT,
     gs_id INTEGER NOT NULL,
     s_id INTEGER NOT NULL,
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
+    -- Optional pass metadata (useful for filtering/ranking)
+    max_elevation REAL,
+    duration INTEGER,
     source TEXT NOT NULL,
     -- ('n2yo' | 'skyfield')
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -56,7 +68,9 @@ CREATE TABLE IF NOT EXISTS predicted_passes (
     FOREIGN KEY (s_id) REFERENCES satellites(s_id),
     CHECK (end_time > start_time)
 );
+-- =========================
 -- Mission ↔ Satellite (many-to-many)
+-- =========================
 CREATE TABLE IF NOT EXISTS mission_satellites (
     mission_id INTEGER NOT NULL,
     s_id INTEGER NOT NULL,
@@ -66,19 +80,34 @@ CREATE TABLE IF NOT EXISTS mission_satellites (
     FOREIGN KEY (mission_id) REFERENCES missions(mission_id),
     FOREIGN KEY (s_id) REFERENCES satellites(s_id)
 );
--- Reservations (references a predicted pass)
+-- =========================
+-- Reservations (source of truth for execution)
+-- - mission_id is optional
+-- - pass_id kept for traceability
+-- - copy window + ids onto reservation so it survives cache cleanup
+-- =========================
 CREATE TABLE IF NOT EXISTS reservations (
     r_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    mission_id INTEGER NOT NULL,
+    mission_id INTEGER,
+    -- NULL allowed
     pass_id INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    -- (RESERVED | ACTIVE | COMPLETED | CANCELLED)
+    -- traceability to predicted_passes
+    gs_id INTEGER NOT NULL,
+    s_id INTEGER NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    cancelled_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
     FOREIGN KEY (mission_id) REFERENCES missions(mission_id),
-    FOREIGN KEY (pass_id) REFERENCES predicted_passes(pass_id)
+    FOREIGN KEY (pass_id) REFERENCES predicted_passes(pass_id),
+    FOREIGN KEY (gs_id) REFERENCES ground_stations(gs_id),
+    FOREIGN KEY (s_id) REFERENCES satellites(s_id),
+    CHECK (end_time > start_time)
 );
+-- =========================
 -- Commands scheduled within a reservation
+-- =========================
 CREATE TABLE IF NOT EXISTS reservation_commands (
     rc_id INTEGER PRIMARY KEY AUTOINCREMENT,
     r_id INTEGER NOT NULL,
@@ -91,15 +120,19 @@ CREATE TABLE IF NOT EXISTS reservation_commands (
     FOREIGN KEY (r_id) REFERENCES reservations(r_id),
     FOREIGN KEY (command_type) REFERENCES command_catalog(command_type)
 );
--- Indexes to speed up next pass querying
+-- =========================
+-- Indexes
+-- =========================
+-- Pass prediction queries
 CREATE INDEX IF NOT EXISTS idx_passes_by_station_time ON predicted_passes (gs_id, start_time);
 CREATE INDEX IF NOT EXISTS idx_passes_by_sat_time ON predicted_passes (s_id, start_time);
--- Prevent adding repeat passes found/calculated
+-- Prevent duplicate predicted passes
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_pass ON predicted_passes (s_id, gs_id, start_time, source);
--- Indexes to speed up 
+-- Reservation queries
 CREATE INDEX IF NOT EXISTS idx_reservations_by_mission ON reservations (mission_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_reservations_by_gs_time ON reservations (gs_id, start_time);
+CREATE INDEX IF NOT EXISTS idx_reservations_by_sat_time ON reservations (s_id, start_time);
 CREATE INDEX IF NOT EXISTS idx_commands_by_reservation_time ON reservation_commands (r_id, execution_time);
-
--- Enforce one reservation per pass
- CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_reservation_per_pass
- ON reservations (pass_id);
+-- Enforce one ACTIVE reservation per pass (cancelled reservations don't block)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_active_reservation_per_pass ON reservations (pass_id)
+WHERE cancelled_at IS NULL;
