@@ -24,11 +24,12 @@ def get_all_gs():
             SELECT *
             FROM ground_stations
     """
-    conn = db_connect
+    conn = db_connect()
     try:
         cur = conn.execute(query)
         rows = cur.fetchall()
         conn.commit()
+        return rows
     except sqlite3.Error:
         conn.rollback()
         raise
