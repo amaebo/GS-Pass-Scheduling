@@ -85,3 +85,11 @@ def get_all_sats_in_mission(mission_id: int):
             ORDER BY mission_satellites.date_added DESC;
         """
     return fetch_all(query, (mission_id,))
+
+def delete_sat_from_mission(mission_id: int, s_id:int):
+    query= """
+            DELETE FROM mission_satellites
+            WHERE mission_id = ? and s_id = ? 
+        """
+    
+    return execute_rowcount(query, (mission_id, s_id))
