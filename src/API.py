@@ -242,3 +242,20 @@ def view_mission_satellites(mission_id: int):
             status_code=404,
             detail="Mission not found"
             )
+# Remove satellite from mission
+@app.delete("/mission/{mission_id}/satellites/{norad_id}")
+def remove_sat_from_mission(mission_id: int, norad_id: int):
+    #check if mission and satellite exists 
+    mission = miss_db.get_mission_by_id(mission_id)
+    satellite = sat_db.get_satellite_by_norad_id(norad_id)
+
+    if mission:
+        if satellite:
+            res = miss_db.delete_sat_from_mission(mission_id, satellite["s_id"])
+            
+            # handle non-existent satellite-connections
+            if not res :
+                raise HTTPException(
+                    status_code = 404,
+                    detail = f"Statellite ({norad_id}) not part of mission ({mission_id})"
+                )
