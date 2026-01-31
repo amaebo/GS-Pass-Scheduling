@@ -208,3 +208,4 @@ data/ground_system.db
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+Ground System (SQLite).session.sql
