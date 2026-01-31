@@ -17,7 +17,7 @@ def fetch_one(query: str, params: tuple | None = None) -> sqlite3.Row | None:
         conn.close()
 
 
-def fetch_all(query: str, params: tuple | None = None):
+def fetch_all(query: str, params: tuple | None = None) -> list[sqlite3.Row] | None:
     """Fetch all rows as a list of sqlite3.Row."""
     conn = db_connect()
     try:
