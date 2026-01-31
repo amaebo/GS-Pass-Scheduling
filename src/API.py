@@ -164,3 +164,30 @@ def update_mission(mission_id: int, mission: MissionUpdate):
             detail="Failed to update mission."
         )
     
+# Delete misssion
+@app.delete("/missions/delete/{mission_id}")
+def remove_mission(mission_id: int):
+    try:
+        #check if mission exists
+        mission = miss_db.get_mission_by_id(mission_id)
+        print("mission", mission, type(mission))
+
+        if mission:
+            mission_row = dict_from_rows(mission)
+            miss_db.delete_mission(mission_id)
+            return{
+                "msg": "Mission deleted",
+                "Mission": dict(mission)
+            }
+        else:
+            raise HTTPException(
+            status_code=404,
+            detail= "Mission (mission_id) not found"
+        )        
+    except sqlite3.Error as e:
+        print(type(e))
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete mission."
+        )
+    #TODO: Handle foreign key constraint exception for satellites connected to mission
