@@ -133,7 +133,7 @@ def view_missions():
             details = "Failed to view mission"
             )
 # Update this mission
-@app.patch("/mission/update/{mission_id}")
+@app.patch("/missions/update/{mission_id}")
 def update_mission(mission_id: int, mission: MissionUpdate):
     updates = mission.model_dump(exclude_unset=True)
     if not updates:
@@ -189,7 +189,7 @@ def delete_mission(mission_id: int):
     #TODO: Handle foreign key constraint exception for satellites connected to mission
 
 # Add satellite to mission.
-@app.post("/mission/{mission_id}/satellites/{norad_id}")
+@app.post("/missions/{mission_id}/satellites/{norad_id}")
 def add_sat_to_mission(mission_id: int, norad_id: int):
     #check if mission and satellite exists 
     mission = miss_db.get_mission_by_id(mission_id)
@@ -227,7 +227,7 @@ def add_sat_to_mission(mission_id: int, norad_id: int):
             )
 
 #View all satellites part of a misison 
-@app.get("/mission/{mission_id}/satellites")
+@app.get("/missions/{mission_id}/satellites")
 def view_mission_satellites(mission_id: int):
     #check if mission exists 
     mission = miss_db.get_mission_by_id(mission_id)
@@ -243,7 +243,7 @@ def view_mission_satellites(mission_id: int):
             detail="Mission not found"
             )
 # Remove satellite from mission
-@app.delete("/mission/{mission_id}/satellites/{norad_id}")
+@app.delete("/missions/{mission_id}/satellites/{norad_id}")
 def remove_sat_from_mission(mission_id: int, norad_id: int):
     #check if mission and satellite exists 
     mission = miss_db.get_mission_by_id(mission_id)
