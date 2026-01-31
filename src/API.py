@@ -189,3 +189,41 @@ def delete_mission(mission_id: int):
             detail="Failed to delete mission."
         )
     #TODO: Handle foreign key constraint exception for satellites connected to mission
+# Add satellite to mission.
+@app.post("/mission/{mission_id}/satellites/{s_id}")
+def add_sat_to_mission(mission_id: int, s_id: int):
+    #check if mission exists 
+    mission = miss_db.get_mission_by_id(mission_id)
+    satellite = sat_db.get_satellite_by_id(s_id)
+
+    if mission:
+        if satellite:
+            try:
+                miss_db.add_sat_mission(mission_id, s_id)
+                mission_satellites = miss_db.get_all_sats_in_mission(mission_id)
+
+                return{
+                    "msg": f"Satellite added to mission",
+                    "mission_id": mission_id, 
+                    "mission_name": mission["mission_name"],
+                    "mission_satellites": [dict(row) for row in mission_satellites]
+                }
+            
+            except sqlite3.IntegrityError as e:
+                print(e)
+                raise HTTPException(
+                    status_code = 500,
+                    detail = "Satellite already added to mission"
+                )
+        else:
+            raise HTTPException(
+            status_code=404,
+            detail="Satellite not found"
+            )
+    
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="Mission not found"
+            )
+        
