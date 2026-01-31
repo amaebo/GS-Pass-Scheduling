@@ -22,14 +22,13 @@ def insert_gs_manual(gs_code: str, lon: float, lat: float) -> int:
 def get_all_gs() -> sqlite3.Row:
     query= """
             SELECT *
-            FROM ground_stations
+            FROM ground_stations;
     """
     conn = db_connect()
     try:
         cur = conn.execute(query)
-        rows = cur.fetchall()
         conn.commit()
-        return rows
+        return cur.fetchall()
     except sqlite3.Error:
         conn.rollback()
         raise

@@ -99,7 +99,7 @@ def register_gs(gs: GroundStation):
             detail = "Ground Station already registered (duplicate gs_code or coordinates)."
         )
     
-#TODO: Create mission 
+# Create Misison
 @app.post("/missions/create", status_code = 201)
 def create_mission (mission: Mission):
     try:
@@ -114,3 +114,17 @@ def create_mission (mission: Mission):
             status_code=500,
             detail="Failed to create mission."
         )
+@app.get("/missions/view")
+def view_missions():
+    try:
+        rows = miss_db.get_missions()
+
+        missions = [dict(row) for row in rows]
+        return{
+            "missions" : missions
+        }
+    except sqlite3.Error:
+        raise HTTPException( 
+            status_code = 500,
+            details = "Failed to view mission"
+            )

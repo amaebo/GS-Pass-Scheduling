@@ -19,3 +19,20 @@ def add_mission(mission_name: str, owner: str | None = None, priority: str | Non
         raise
     finally:
         conn.close()
+
+def get_missions():
+    query = """
+            SELECT *
+            FROM missions;
+        """
+    conn = db_connect()
+    
+    try:
+        cur = conn.execute(query)
+        conn.commit()
+        return cur.fetchall()
+    except sqlite3.Error:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
