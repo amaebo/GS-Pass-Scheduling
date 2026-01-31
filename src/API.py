@@ -259,3 +259,10 @@ def remove_sat_from_mission(mission_id: int, norad_id: int):
                     status_code = 404,
                     detail = f"Statellite ({norad_id}) not part of mission ({mission_id})"
                 )
+            
+            return{
+                "msg": f"Satellite ({norad_id}) was removed from mission ({mission_id}).",
+                "Mission satellites" : [dict(row) for row in miss_db.get_all_sats_in_mission(mission_id)]
+            }
+    else:
+        raise HTTPException ( status_code = 404 , detail = "Mission not found.")
