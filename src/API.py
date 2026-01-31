@@ -166,14 +166,12 @@ def update_mission(mission_id: int, mission: MissionUpdate):
     
 # Delete misssion
 @app.delete("/missions/delete/{mission_id}")
-def remove_mission(mission_id: int):
+def delete_mission(mission_id: int):
     try:
         #check if mission exists
         mission = miss_db.get_mission_by_id(mission_id)
-        print("mission", mission, type(mission))
 
         if mission:
-            mission_row = dict_from_rows(mission)
             miss_db.delete_mission(mission_id)
             return{
                 "msg": "Mission deleted",
