@@ -32,7 +32,7 @@ class MissionUpdate(BaseModel):
     priority: str | None = None
 
 # View all registered satellites
-@app.get("/satellites/view")
+@app.get("/satellites")
 def list_satellites():
     try:
         rows = sat_db.get_all_satellites()
@@ -66,7 +66,7 @@ def register_satellite(satellite: Satellite ):
             detail= "Satellite already registered (duplicate NORAD ID)."
         )
 # View ground stations list
-@app.get("/groundstations/view")
+@app.get("/groundstations")
 def list_gs():
     try:
         rows = gs_db.get_all_gs()
@@ -120,7 +120,7 @@ def create_mission (mission: Mission):
             detail="Failed to create mission."
         )
 # View the missions
-@app.get("/missions/view")
+@app.get("/missions")
 def view_missions():
     try:
         rows = miss_db.get_all_missions()
