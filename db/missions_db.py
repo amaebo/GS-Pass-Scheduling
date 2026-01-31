@@ -66,6 +66,6 @@ def delete_mission(mission_id: int):
         """
     
     try:
-        return execute(query, (mission_id,))
+        execute(query, (mission_id,))
     except sqlite3.Error:
         raise
