@@ -1,6 +1,6 @@
 
 import sqlite3
-from db.db_query import execute, fetch_all
+from db.db_query import execute_row_id, fetch_all
 
 
 def insert_gs_manual(gs_code: str, lon: float, lat: float) -> int:
@@ -9,7 +9,7 @@ def insert_gs_manual(gs_code: str, lon: float, lat: float) -> int:
             VALUES (?,?,?,?,?);
         """
     try:
-        return execute(query, (gs_code, lon, lat, "manual", "ACTIVE"))
+        return execute_row_id(query, (gs_code, lon, lat, "manual", "ACTIVE"))
     except sqlite3.Error:
         raise
 
