@@ -33,3 +33,14 @@ def get_satellite_by_id(s_id: int):
         return fetch_one(query,(s_id,))
     except sqlite3.Error:
         raise
+
+def get_satellite_by_norad_id(norad_id: int):
+    query = """
+            SELECT *
+            FROM satellites
+            WHERE norad_id = ?
+        """
+    try:
+        return fetch_one(query, (norad_id,))
+    except sqlite3.Error:
+        raise

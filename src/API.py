@@ -191,16 +191,16 @@ def delete_mission(mission_id: int):
     #TODO: Handle foreign key constraint exception for satellites connected to mission
 
 # Add satellite to mission.
-@app.post("/mission/{mission_id}/satellites/{s_id}")
-def add_sat_to_mission(mission_id: int, s_id: int):
+@app.post("/mission/{mission_id}/satellites/{norad_id}")
+def add_sat_to_mission(mission_id: int, norad_id: int):
     #check if mission and satellite exists 
     mission = miss_db.get_mission_by_id(mission_id)
-    satellite = sat_db.get_satellite_by_id(s_id)
+    satellite = sat_db.get_satellite_by_norad_id(norad_id)
 
     if mission:
         if satellite:
             try:
-                miss_db.add_sat_mission(mission_id, s_id)
+                miss_db.add_sat_mission(mission_id, satellite["s_id"])
                 mission_satellites = miss_db.get_all_sats_in_mission(mission_id)
 
                 return{

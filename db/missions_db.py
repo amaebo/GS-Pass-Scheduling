@@ -78,7 +78,7 @@ def add_sat_mission(mission_id:int, s_id:int, role: str = 'UNASSIGNED'):
 
 def get_all_sats_in_mission(mission_id: int):
     query = """
-            SELECT satellites.s_id, satellites.s_name, satellites.norad_id, mission_satellites.role, mission_satellites.date_added
+            SELECT satellites.s_name, satellites.norad_id, mission_satellites.role, mission_satellites.date_added
             FROM mission_satellites 
                 INNER JOIN satellites on mission_satellites.s_id = satellites.s_id
             WHERE mission_id = ?
