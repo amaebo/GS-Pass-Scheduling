@@ -1,7 +1,7 @@
 
 
 import sqlite3
-from db.db_query import execute, execute_rowcount, fetch_all, fetch_one
+from db.db_query import execute, execute_row_id, execute_rowcount, fetch_all, fetch_one
 
 
 def add_mission(mission_name: str, owner: str | None = None, priority: str | None = None) -> int:
@@ -10,7 +10,7 @@ def add_mission(mission_name: str, owner: str | None = None, priority: str | Non
             VALUES (?, ?, ?);
         """
     try:
-        return execute(query, (mission_name, owner, priority))
+        return execute_row_id(query, (mission_name, owner, priority))
     except sqlite3.Error:
         raise
 
@@ -59,3 +59,13 @@ def update_mission(mission_id: int, updates: dict) -> int:
     except sqlite3.Error:
         raise
     
+def delete_mission(mission_id: int):
+    query = """
+            DELETE FROM missions
+            WHERE mission_id = ?;
+        """
+    
+    try:
+        return execute(query, (mission_id,))
+    except sqlite3.Error:
+        raise
