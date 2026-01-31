@@ -5,6 +5,7 @@ import sqlite3
 #database querying 
 import db.satellites_db as sat_db
 import db.gs_db as gs_db
+import db.missions_db as miss_db
 
 GS_CODE_REGEX = r"^[A-Z][A-Z0-9_]{2,49}$"  # 3–50 chars, all caps, with numbers or underscores allowed.
 
@@ -19,8 +20,13 @@ class GroundStation(BaseModel):
     gs_code: str = Field(min_length=3, max_length=50, pattern=GS_CODE_REGEX)
     lon: float
     lat: float
-    
-#TODO: Implement list of satellite view 
+
+class Mission(BaseModel):
+    mission_name: str = Field(..., min_length = 1)
+    owner: str | None = None
+    priority: str | None = None
+
+# View all registered satellites
 @app.get("/satellites/view")
 def list_satellites():
     try:
@@ -93,3 +99,18 @@ def register_gs(gs: GroundStation):
             detail = "Ground Station already registered (duplicate gs_code or coordinates)."
         )
     
+#TODO: Create mission 
+@app.post("/missions/create", status_code = 201)
+def create_mission (mission: Mission):
+    try:
+        mission_id = miss_db.add_mission(mission.mission_name, mission.owner, mission.priority)
+        return {
+            "msg": "Mission created",
+            "mission_id": mission_id,
+            "mission": mission.model_dump()
+        }
+    except sqlite3.Error:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create mission."
+        )
