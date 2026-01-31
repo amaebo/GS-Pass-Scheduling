@@ -69,3 +69,19 @@ def delete_mission(mission_id: int):
         execute(query, (mission_id,))
     except sqlite3.Error:
         raise
+def add_sat_mission(mission_id:int, s_id:int, role: str = 'UNASSIGNED'):
+    query = """
+            INSERT INTO mission_satellites(mission_id, s_id, role)
+            VALUES (?,?,?)
+        """
+    return execute_row_id(query, (mission_id, s_id, role))
+
+def get_all_sats_in_mission(mission_id: int):
+    query = """
+            SELECT satellites.s_id, satellites.s_name, satellites.norad_id, mission_satellites.role, mission_satellites.date_added
+            FROM mission_satellites 
+                INNER JOIN satellites on mission_satellites.s_id = satellites.s_id
+            WHERE mission_id = ?
+            ORDER BY mission_satellites.date_added DESC;
+        """
+    return fetch_all(query, (mission_id,))
