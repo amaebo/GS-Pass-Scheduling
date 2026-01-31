@@ -26,6 +26,11 @@ class Mission(BaseModel):
     owner: str | None = None
     priority: str | None = None
 
+class MissionUpdate(BaseModel):
+    mission_name: str | None = Field(None, min_length = 1)
+    owner: str | None = None
+    priority: str | None = None
+
 # View all registered satellites
 @app.get("/satellites/view")
 def list_satellites():
@@ -104,20 +109,21 @@ def register_gs(gs: GroundStation):
 def create_mission (mission: Mission):
     try:
         mission_id = miss_db.add_mission(mission.mission_name, mission.owner, mission.priority)
+        mission_data = miss_db.get_mission_by_id(mission_id)
         return {
             "msg": "Mission created",
-            "mission_id": mission_id,
-            "mission": mission.model_dump()
+            "mission": mission_data
         }
     except sqlite3.Error:
         raise HTTPException(
             status_code=500,
             detail="Failed to create mission."
         )
+# View the missions
 @app.get("/missions/view")
 def view_missions():
     try:
-        rows = miss_db.get_missions()
+        rows = miss_db.get_all_missions()
 
         missions = [dict(row) for row in rows]
         return{
@@ -128,3 +134,33 @@ def view_missions():
             status_code = 500,
             details = "Failed to view mission"
             )
+# Update this mission
+@app.patch("/mission/update/{mission_id}")
+def update_mission(mission_id: int, mission: MissionUpdate):
+    updates = mission.model_dump(exclude_unset=True)
+    if not updates:
+        raise HTTPException(
+            status_code=400,
+            detail="No fields provided to update."
+        )
+
+    try:
+        existing = miss_db.get_mission_by_id(mission_id)
+        if existing is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Mission not found."
+            )
+
+        miss_db.update_mission(mission_id, updates)
+        updated = miss_db.get_mission_by_id(mission_id)
+        return {
+            "msg": "Mission updated",
+            "mission": dict(updated) if updated else None
+        }
+    except sqlite3.Error:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update mission."
+        )
+    
