@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS predicted_passes (
 CREATE TABLE IF NOT EXISTS mission_satellites (
     mission_id INTEGER NOT NULL,
     s_id INTEGER NOT NULL,
-    role TEXT NOT NULL,
+    role TEXT DEFAULT 'UNASSIGNED',   --'PRIMARY' |'BACKUP' |'PAYLOAD'|'UNASSIGNED'
     date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (mission_id, s_id),
     FOREIGN KEY (mission_id) REFERENCES missions(mission_id),
