@@ -1,5 +1,5 @@
 import sqlite3
-from db.db_query import execute_row_id, fetch_all
+from db.db_query import execute_row_id, fetch_all, fetch_one
 
 
 def insert_new_satellite(norad_id: int, s_name: str) -> int:
@@ -20,5 +20,16 @@ def get_all_satellites():
     """
     try:
         return fetch_all(query)
+    except sqlite3.Error:
+        raise
+
+def get_satellite_by_id(s_id: int):
+    query = """
+            SELECT *
+            FROM satellites
+            WHERE s_id = ?
+        """
+    try:
+        return fetch_one(query,(s_id,))
     except sqlite3.Error:
         raise
