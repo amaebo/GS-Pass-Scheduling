@@ -13,11 +13,19 @@ def insert_new_satellite(norad_id: int, s_name: str) -> int:
     except sqlite3.Error:
         raise
 
-def get_all_satellites():
-    query= """
-            SELECT *
-            FROM satellites
-    """
+def get_all_satellites(include_s_id: bool = False):
+    if include_s_id:
+        query = """
+                SELECT s_id, s_name, norad_id, mode, health_status, date_added
+                FROM satellites
+            """
+        
+    else:
+        query= """
+                SELECT s_name, norad_id, mode, health_status, date_added
+                FROM satellites
+            """
+        
     try:
         return fetch_all(query)
     except sqlite3.Error:

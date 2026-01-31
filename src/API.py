@@ -35,12 +35,10 @@ class MissionUpdate(BaseModel):
 @app.get("/satellites")
 def list_satellites():
     try:
-        rows = sat_db.get_all_satellites()
+        rows = sat_db.get_all_satellites(True)
                 
-        #convert rows to list of dictionaries (for json formatting)
-        list_of_rows = [dict(row) for row in rows]
         return {
-            "satellites": list_of_rows
+            "satellites": [dict(row) for row in rows]
             }
     except sqlite3.Error:
         raise HTTPException(
