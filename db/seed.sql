@@ -1,5 +1,4 @@
 PRAGMA foreign_keys = ON;
-BEGIN TRANSACTION;
 -- =========================================================
 -- DEV RESET (child tables first)
 -- =========================================================
@@ -378,4 +377,3 @@ VALUES -- Reservation 1 (ISS) - normal flow
         '2026-01-29 19:26:30',
         NULL
     );
-COMMIT;
