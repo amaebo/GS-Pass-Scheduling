@@ -11,7 +11,7 @@ router = APIRouter()
 @router.get("/satellites")
 def list_satellites():
     try:
-        rows = sat_db.get_all_satellites(True)
+        rows = sat_db.get_all_satellites()
         return {"satellites": [dict(row) for row in rows]}
     except sqlite3.Error:
         raise HTTPException(
