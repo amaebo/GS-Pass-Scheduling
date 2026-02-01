@@ -77,8 +77,14 @@ CREATE TABLE IF NOT EXISTS mission_satellites (
     role TEXT DEFAULT 'UNASSIGNED',   --'PRIMARY' |'BACKUP' |'PAYLOAD'|'UNASSIGNED'
     date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (mission_id, s_id),
-    FOREIGN KEY (mission_id) REFERENCES missions(mission_id),
-    FOREIGN KEY (s_id) REFERENCES satellites(s_id)
+    FOREIGN KEY (mission_id) 
+        REFERENCES missions(mission_id) 
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (s_id) 
+        REFERENCES satellites(s_id) 
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 -- =========================
 -- Reservations (source of truth for execution)
