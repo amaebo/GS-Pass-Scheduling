@@ -31,15 +31,21 @@ def get_passes_from_n2yo(
     return normalize_n2yo_passes(res)
 
 def normalize_n2yo_passes(res: httpx.Response) -> list[dict]:
-    """Convert N2YO pass times from Unix seconds to UTC ISO timestamps."""
+    """Convert N2YO pass times from Unix seconds to UTC ISO timestamps.
+        Expected API keys: `passes`- list of passes with `satid`,`startUTC`, `endUTC` """
     data = res.json()
     passes: list[dict] = []
 
     # 
     for p in data.get("passes", []):
-        start_unix_time = p["startUTC"]
-        end_unix_time = p["endUTC"]
-        norad_id = p["satid"]
+        try:
+            start_unix_time = p["startUTC"]
+            end_unix_time = p["endUTC"]
+            norad_id = p["satid"]
+        except KeyError as e:
+          missing = e.args[0]
+          raise HTTPException(status_code=502, detail=f"N2YO API service response missing '{missing}'")
+
         passes.append({
             "norad_id": norad_id,
             "start_time": datetime.fromtimestamp(start_unix_time, tz=timezone.utc).isoformat(sep=" "),
