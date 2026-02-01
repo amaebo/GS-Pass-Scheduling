@@ -25,11 +25,12 @@ def register_gs(gs: GroundStation):
     try:
         lon = round(gs.lon, 5)
         lat = round(gs.lat, 5)
+        alt = round(gs.alt, 2)
 
-        gs_db.insert_gs_manual(gs.gs_code, lon, lat)
+        gs_db.insert_gs_manual(gs.gs_code, lon, lat, alt)
         return {
             "msg": "Ground station registered",
-            "Ground Station": {"gs_code": gs.gs_code, "lon": lon, "lat": lat},
+            "Ground Station": {"gs_code": gs.gs_code, "lon": lon, "lat": lat, "alt": alt},
         }
     except sqlite3.IntegrityError:
         raise HTTPException(
