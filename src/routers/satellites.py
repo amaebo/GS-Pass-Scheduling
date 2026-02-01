@@ -1,16 +1,11 @@
 import sqlite3
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
 
 import db.satellites_db as sat_db
+from src.schemas.satellites import Satellite
 
 
 router = APIRouter()
-
-
-class Satellite(BaseModel):
-    norad_id: int = Field(..., ge=1)  # must be >= 1
-    s_name: str = Field(..., min_length=1)
 
 
 @router.get("/satellites")

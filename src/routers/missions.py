@@ -1,24 +1,12 @@
 import sqlite3
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
 
 import db.missions_db as miss_db
 import db.satellites_db as sat_db
+from src.schemas.missions import Mission, MissionUpdate
 
 
 router = APIRouter()
-
-
-class Mission(BaseModel):
-    mission_name: str = Field(..., min_length=1)
-    owner: str | None = None
-    priority: str | None = None
-
-
-class MissionUpdate(BaseModel):
-    mission_name: str | None = Field(None, min_length=1)
-    owner: str | None = None
-    priority: str | None = None
 
 
 @router.post("/missions/create", status_code=201)
