@@ -7,7 +7,6 @@ import db.satellites_db as sat_db
 import db.gs_db as gs_db
 import db.missions_db as miss_db
 
-GS_CODE_REGEX = r"^[A-Z][A-Z0-9_]{2,49}$"  # 3–50 chars, all caps, with numbers or underscores allowed.
 
 app = FastAPI()
 
@@ -15,6 +14,8 @@ app = FastAPI()
 class Satellite(BaseModel):
     norad_id: int = Field(..., ge = 1)  # must be >= 1
     s_name: str = Field(..., min_length = 1)
+
+GS_CODE_REGEX = r"^[A-Z][A-Z0-9_]{2,49}$"  # 3–50 chars, all caps, with numbers or underscores allowed.
 
 class GroundStation(BaseModel):
     gs_code: str = Field(min_length=3, max_length=50, pattern=GS_CODE_REGEX)
