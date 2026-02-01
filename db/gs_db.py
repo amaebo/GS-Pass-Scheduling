@@ -1,6 +1,6 @@
 
 import sqlite3
-from db.db_query import execute_row_id, fetch_all
+from db.db_query import execute_row_id, fetch_all, fetch_one
 
 
 def insert_gs_manual(gs_code: str, lon: float, lat: float, alt: float) -> int:
