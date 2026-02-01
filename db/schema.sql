@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS ground_stations (
     gs_code TEXT NOT NULL UNIQUE,
     lat REAL NOT NULL,
     lon REAL NOT NULL,
+    alt REAL NOT NULL,
     source TEXT NOT NULL,
     -- (MANUAL, AWS, SATNOGS etc.)
     status TEXT NOT NULL,

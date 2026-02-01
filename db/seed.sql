@@ -19,6 +19,7 @@ INSERT INTO ground_stations (
         gs_code,
         lat,
         lon,
+        alt,
         source,
         status,
         date_added
@@ -28,6 +29,7 @@ VALUES (
         'DEN_CO',
         39.7392,
         -104.9903,
+        1609.0,
         'MANUAL',
         'ACTIVE',
         '2026-01-10 12:00:00'
@@ -37,9 +39,20 @@ VALUES (
         'BOU_CO',
         40.01499,
         -105.27055,
+        1655.0,
         'MANUAL',
         'ACTIVE',
         '2026-01-10 12:05:00'
+    ),
+    (
+        3,
+        'SFO_CA',
+        37.7749,
+        -122.4194,
+        16.0,
+        'MANUAL',
+        'ACTIVE',
+        '2026-01-10 12:10:00'
     );
 -- =========================================================
 -- Satellites
