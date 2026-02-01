@@ -26,7 +26,7 @@ def get_passes_from_n2yo(
         f"{N2YO_BASE_URL}visualpasses/{norad_id}/{gs_lat}/{gs_lon}/{alt}/{days}/{min_visibility}",
         params={"apiKey": N2YO_API_KEY}
     )
-    #
+    # raise 404 error if item not found
     res.raise_for_status()
     return normalize_n2yo_passes(res)
 
