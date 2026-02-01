@@ -22,3 +22,13 @@ def get_all_gs() -> sqlite3.Row:
         return fetch_all(query)
     except sqlite3.Error:
         raise
+def get_gs_by_id(gs_id: int):
+    query = """
+            SELECT *
+            FROM ground_stations
+            WHERE gs_id = ?
+        """
+    try:
+        return fetch_one(query, (gs_id,))
+    except sqlite3.Error:
+        raise
