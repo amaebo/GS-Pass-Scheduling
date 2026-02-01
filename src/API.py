@@ -180,13 +180,11 @@ def delete_mission(mission_id: int):
             status_code=404,
             detail= "Mission (mission_id) not found"
         )        
-    except sqlite3.Error as e:
-        print(type(e))
+    except sqlite3.Error:
         raise HTTPException(
             status_code=500,
             detail="Failed to delete mission."
-        )
-    #TODO: Handle foreign key constraint exception for satellites connected to mission
+        )   
 
 # Add satellite to mission.
 @app.post("/missions/{mission_id}/satellites/{norad_id}")
