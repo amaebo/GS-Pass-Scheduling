@@ -2,6 +2,10 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import sqlite3
+import requests
+import os
+from dotenv import load_dotenv
+from pathlib import Path
 #database querying 
 import db.satellites_db as sat_db
 import db.gs_db as gs_db
@@ -9,6 +13,11 @@ import db.missions_db as miss_db
 
 
 app = FastAPI()
+
+#Load NY2O API constants 
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+N2YO_API_KEY = os.getenv("N2YO_API_KEY")
+N2YO_BASE_URL = os.getenv("N2YO_API_BASE_URL")
 
 # Pydantic models for API data validation
 class Satellite(BaseModel):
