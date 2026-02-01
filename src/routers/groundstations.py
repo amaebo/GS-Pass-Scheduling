@@ -2,7 +2,7 @@ import sqlite3
 from fastapi import APIRouter, HTTPException
 
 import db.gs_db as gs_db
-from src.schemas.groundstations import GroundStation
+from src.schemas import GroundStation
 
 
 router = APIRouter()

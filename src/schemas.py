@@ -1,0 +1,26 @@
+from pydantic import BaseModel, Field
+
+GS_CODE_REGEX = r"^[A-Z][A-Z0-9_]{2,49}$"  # 3–50 chars, all caps, with numbers or underscores allowed.
+
+
+class Satellite(BaseModel):
+    norad_id: int = Field(..., ge=1)  # must be >= 1
+    s_name: str = Field(..., min_length=1)
+
+
+class GroundStation(BaseModel):
+    gs_code: str = Field(min_length=3, max_length=50, pattern=GS_CODE_REGEX)
+    lon: float
+    lat: float
+
+
+class Mission(BaseModel):
+    mission_name: str = Field(..., min_length=1)
+    owner: str | None = None
+    priority: str | None = None
+
+
+class MissionUpdate(BaseModel):
+    mission_name: str | None = Field(None, min_length=1)
+    owner: str | None = None
+    priority: str | None = None

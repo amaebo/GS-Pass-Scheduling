@@ -2,7 +2,7 @@ import sqlite3
 from fastapi import APIRouter, HTTPException
 
 import db.satellites_db as sat_db
-from src.schemas.satellites import Satellite
+from src.schemas import Satellite
 
 
 router = APIRouter()

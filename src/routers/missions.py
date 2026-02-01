@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 
 import db.missions_db as miss_db
 import db.satellites_db as sat_db
-from src.schemas.missions import Mission, MissionUpdate
+from src.schemas import Mission, MissionUpdate
 
 
 router = APIRouter()
