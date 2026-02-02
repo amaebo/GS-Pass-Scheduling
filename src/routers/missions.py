@@ -88,33 +88,35 @@ def add_sat_to_mission(mission_id: int, norad_id: int):
     mission = miss_db.get_mission_by_id(mission_id)
     satellite = sat_db.get_satellite_by_norad_id(norad_id)
 
-    if mission:
-        if satellite:
-            try:
-                miss_db.add_sat_mission(mission_id, satellite["s_id"])
-                mission_satellites = miss_db.get_all_sats_in_mission(mission_id)
-
-                return {
-                    "msg": "Satellite added to mission",
-                    "mission_id": mission_id,
-                    "mission_name": mission["mission_name"],
-                    "mission_satellites": [dict(row) for row in mission_satellites],
-                }
-            except sqlite3.IntegrityError as e:
-                print(e)
-                raise HTTPException(
-                    status_code=500,
-                    detail="Satellite already added to mission"
-                )
+    if not mission:
+        raise HTTPException(
+        status_code=404,
+        detail="Mission not found"
+        )
+    if not satellite:
         raise HTTPException(
             status_code=404,
             detail="Satellite not found"
         )
+    
+    try:
+        miss_db.add_sat_mission(mission_id, satellite["s_id"])
+        mission_satellites = miss_db.get_all_sats_in_mission(mission_id)
 
-    raise HTTPException(
-        status_code=404,
-        detail="Mission not found"
-    )
+        return {
+            "msg": "Satellite added to mission",
+            "mission_id": mission_id,
+            "mission_name": mission["mission_name"],
+            "mission_satellites": [dict(row) for row in mission_satellites],
+        }
+    except sqlite3.IntegrityError as e:
+        raise HTTPException(
+            status_code=409,
+            detail="Satellite already added to mission"
+        )
+        
+
+    
 
 
 @router.get("/missions/{mission_id}/satellites")
