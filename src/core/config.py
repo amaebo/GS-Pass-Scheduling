@@ -1,3 +1,4 @@
+"Get configs from .env file"
 import os
 from pathlib import Path
 
