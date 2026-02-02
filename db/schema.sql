@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS predicted_passes (
     FOREIGN KEY (gs_id) REFERENCES ground_stations(gs_id),
     FOREIGN KEY (s_id) REFERENCES satellites(s_id),
     CHECK (end_time > start_time)
+    UNIQUE (gs_id, s_id, start_time, end_time)
 );
 -- =========================
 -- Mission ↔ Satellite (many-to-many)
