@@ -107,10 +107,18 @@ CREATE TABLE IF NOT EXISTS reservations (
     cancelled_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
-    FOREIGN KEY (mission_id) REFERENCES missions(mission_id),
-    FOREIGN KEY (pass_id) REFERENCES predicted_passes(pass_id),
-    FOREIGN KEY (gs_id) REFERENCES ground_stations(gs_id),
-    FOREIGN KEY (s_id) REFERENCES satellites(s_id),
+    FOREIGN KEY (mission_id) REFERENCES missions(mission_id)
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE,
+    FOREIGN KEY (pass_id) REFERENCES predicted_passes(pass_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (gs_id) REFERENCES ground_stations(gs_id)
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE,
+    FOREIGN KEY (s_id) REFERENCES satellites(s_id)
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE,
     CHECK (end_time > start_time)
 );
 -- =========================
@@ -125,7 +133,9 @@ CREATE TABLE IF NOT EXISTS reservation_commands (
     -- (PLANNED | QUEUED | SENT | ACKED | FAILED | CANCELLED)
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
-    FOREIGN KEY (r_id) REFERENCES reservations(r_id),
+    FOREIGN KEY (r_id) REFERENCES reservations(r_id)
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE,
     FOREIGN KEY (command_type) REFERENCES command_catalog(command_type)
 );
 -- =========================
