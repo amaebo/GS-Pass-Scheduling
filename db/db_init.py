@@ -13,9 +13,11 @@ def db_connect(db_path: str | None = None) -> sqlite3.Connection:
     Create and return a SQLite database connection.
     """
     path = Path(db_path) if db_path else DB_PATH
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, timeout=5.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
+    conn.execute("PRAGMA busy_timeout = 5000;")
+    conn.execute("PRAGMA journal_mode = WAL;")
     return conn
 
 
