@@ -52,6 +52,11 @@ def delete_expired_passes():
     query = """
             DELETE FROM predicted_passes
             WHERE start_time < CURRENT_TIMESTAMP
+            AND NOT EXISTS (
+                SELECT 1
+                FROM reservations r
+                WHERE r.pass_id = predicted_passes.pass_id
+            );
         """
     return execute_rowcount(query)
 
