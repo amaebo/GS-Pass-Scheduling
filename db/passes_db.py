@@ -18,14 +18,28 @@ def insert_n2yo_pass_return_id(
     row = get_pass_id(gs_id, s_id, start_time, end_time)
     return row["pass_id"] if row else None
 
-def get_passes_by_gs_and_sat(s_id:int, gs_id:int):
+
+def get_latest_pass_end_time(gs_id: int, s_id: int):
+    query = """
+            SELECT end_time
+            FROM predicted_passes
+            WHERE gs_id = ? AND s_id = ?
+            ORDER BY end_time DESC
+            LIMIT 1
+        """
+    return fetch_one(query, (gs_id, s_id))
+
+
+def get_all_future_passes(s_id:int, gs_id:int):
     query = """
             SELECT *
             FROM predicted_passes
             WHERE s_id = ? and gs_id = ?
+              AND start_time >= CURRENT_TIMESTAMP
+            ORDER BY start_time ASC
         """
     return fetch_all(query, (s_id, gs_id))
-    
+
 def delete_pass_by_pass_id(pass_id: int):
     query = """
             DELETE FROM predicted_passes
@@ -39,6 +53,8 @@ def delete_expired_passes():
             WHERE start_time < CURRENT_TIMESTAMP
         """
     return execute_rowcount(query)
+
+
 
 def get_pass_id (gs_id: int, s_id: int, start_time: str, end_time: str):
     query = """
