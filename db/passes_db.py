@@ -30,13 +30,20 @@ def get_latest_pass_end_time(gs_id: int, s_id: int):
     return fetch_one(query, (gs_id, s_id))
 
 
-def get_all_future_passes(s_id:int, gs_id:int):
+def get_claimable_passes(s_id:int, gs_id:int):
+    #claimable passes are unreserved, non‑expired passes
     query = """
             SELECT p.pass_id, p.gs_id, s.norad_id, p.start_time, p.end_time, p.source
             FROM predicted_passes as p
                 INNER JOIN satellites as s ON p.s_id = s.s_id
             WHERE p.s_id = ? and p.gs_id = ?
               AND start_time >= CURRENT_TIMESTAMP
+              AND NOT EXISTS (
+                SELECT 1
+                FROM reservations r
+                WHERE r.pass_id = p.pass_id
+                  AND r.cancelled_at IS NULL
+              )
             ORDER BY start_time ASC
         """
     return fetch_all(query, (s_id, gs_id))

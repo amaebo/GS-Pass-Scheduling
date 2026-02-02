@@ -83,7 +83,7 @@ def view_pass(norad_id: int, gs_id: int):
         raise HTTPException(status_code=500, detail="Expired passes could not be deleted")
 
     # Fetch final list of valid future passes
-    rows = p_db.get_all_future_passes(
+    rows = p_db.get_claimable_passes(
         satellite["s_id"],
         gs["gs_id"],
     )
