@@ -32,7 +32,7 @@ def get_passes_from_n2yo(
     
     # Log API requests sent and responses recieved.
     if res.status_code == httpx.codes.OK:
-        transaction_count = res.json().get("info")["transaction_count"]
+        transaction_count = res.json().get("info")["transactionscount"]
         logger.info(f"N2YO API request sent. {N2YO_BASE_URL}visualpasses/{norad_id}/{gs_lat}/{gs_lon}/{alt}/{days}/{min_visibility}")
         logger.info(f"N2YO API response received. Transaction count in the last hour: {transaction_count}")
         
@@ -50,6 +50,7 @@ def normalize_n2yo_passes(res: httpx.Response) -> list[dict]:
             list[dict]: A list of passes with `norad_id`, `start_time` and `end_time` keys"""
     data = res.json()
     raw_passes = data.get("passes", [])
+    norad_id = data.get("info")["satid"]
 
     normalized_passes: list[dict] = []
 
@@ -57,7 +58,7 @@ def normalize_n2yo_passes(res: httpx.Response) -> list[dict]:
         try:
             start_unix_time = p["startUTC"]
             end_unix_time = p["endUTC"]
-            norad_id = p["satid"]
+            norad_id = data.get("info")["satid"]
         except KeyError as e:
           missing = e.args[0]
           raise HTTPException(status_code=502, detail=f"N2YO API service response missing '{missing}'")
