@@ -21,7 +21,7 @@ def _parse_db_time(value: str) -> datetime:
 
 @router.get("/passes")
 def view_pass(norad_id: int, gs_id: int):
-    # ----get satellite and ground station information----
+    # Fetch required entities
     satellite = sat_db.get_satellite_by_norad_id(norad_id)
     gs = gs_db.get_gs_by_id(gs_id)
 
@@ -30,13 +30,14 @@ def view_pass(norad_id: int, gs_id: int):
     if not satellite:
         raise HTTPException(status_code=404, detail="Satellite not found.")
 
+    # Determine whether pass cache is stale
     now_utc = datetime.now(timezone.utc)
     refresh_threshold = now_utc + timedelta(hours=12)
 
     latest_row = p_db.get_latest_pass_end_time(gs["gs_id"], satellite["s_id"])
-    latest_end_time = _parse_db_time(latest_row["end_time"]) if latest_row else None #convert current time zone time
-    
-    # -----Refresh cache if latest gs-sat pass is greater than 12 hours or no passes have been cached yet.--------
+    latest_end_time = _parse_db_time(latest_row["end_time"]) if latest_row else None
+
+    # Refresh cache from N2YO if needed
     if latest_end_time is None or latest_end_time < refresh_threshold:
         try:
             n2yo_passes = get_passes_from_n2yo(
@@ -53,8 +54,8 @@ def view_pass(norad_id: int, gs_id: int):
         total_passes = len(n2yo_passes)
         passes_cached_count = 0
         pass_ids = []
-        
-        #add only new passes to cache
+
+        # Insert only new passes into cache
         try:
             for p in n2yo_passes:
                 pass_id = p_db.insert_n2yo_pass_return_id(
@@ -68,28 +69,24 @@ def view_pass(norad_id: int, gs_id: int):
                     passes_cached_count += 1
 
             logger.info(
-                f"{passes_cached_count} new passes cached out of {total_passes} passes received by N2YO API. "
+                f"{passes_cached_count} new passes cached out of {total_passes} from N2YO. "
                 f"pass_ids: {pass_ids}"
             )
         except sqlite3.Error:
             raise HTTPException(status_code=502, detail="Passes could not be added")
-        
-    # Always remove expired passes to avoid unbounded cache growth.
+
+    # Housekeeping: remove expired passes
     try:
         exp_delete_count = p_db.delete_expired_passes()
+        logger.info(f"{exp_delete_count} expired passes deleted from cache.")
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Expired passes could not be deleted")
 
-    logger.info(f"{exp_delete_count} expired passes deleted from database/cache.")
-
+    # Fetch final list of valid future passes
     rows = p_db.get_all_future_passes(
         satellite["s_id"],
         gs["gs_id"],
     )
-    final_passes = [dict(p) for p in rows]
 
-
-    return{
-        "passes": final_passes
-    }
+    return {"passes": [dict(p) for p in rows]}
     
