@@ -32,9 +32,10 @@ def get_latest_pass_end_time(gs_id: int, s_id: int):
 
 def get_all_future_passes(s_id:int, gs_id:int):
     query = """
-            SELECT *
-            FROM predicted_passes
-            WHERE s_id = ? and gs_id = ?
+            SELECT p.pass_id, p.gs_id, s.norad_id, p.start_time, p.end_time, p.source
+            FROM predicted_passes as p
+                INNER JOIN satellites as s ON p.s_id = s.s_id
+            WHERE p.s_id = ? and p.gs_id = ?
               AND start_time >= CURRENT_TIMESTAMP
             ORDER BY start_time ASC
         """
