@@ -34,7 +34,7 @@ def get_passes_from_n2yo(
     if res.status_code == httpx.codes.OK:
         transaction_count = res.json().get("info")["transaction_count"]
         logger.info(f"N2YO API request sent. {N2YO_BASE_URL}visualpasses/{norad_id}/{gs_lat}/{gs_lon}/{alt}/{days}/{min_visibility}")
-        logger.info(f"N2YO API response recieved. Transaction count in the last hour: {transaction_count}")
+        logger.info(f"N2YO API response received. Transaction count in the last hour: {transaction_count}")
         
     
     #normalize passes
