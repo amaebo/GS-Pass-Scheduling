@@ -11,7 +11,7 @@ def get_passes_from_n2yo(
     gs_lon: float,
     gs_lat: float,
     alt: float,
-    min_visibility: int,
+    min_visibility: int = 30,
     days: int = 1,
 ) -> list[dict]:
     """Send N2YO API request to get passes.
