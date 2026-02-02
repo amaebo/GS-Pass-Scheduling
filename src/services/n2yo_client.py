@@ -43,8 +43,14 @@ def get_passes_from_n2yo(
     return normalized_passes
 
 def normalize_n2yo_passes(res: httpx.Response) -> list[dict]:
-    """Convert N2YO pass times from Unix seconds to UTC ISO timestamps.
-        Expected API keys: `passes`- list of passes with `satid`,`startUTC`, `endUTC` 
+    """
+    Convert N2YO pass times from Unix seconds to UTC ISO timestamps.
+        
+        Expected API keys:
+
+        'info' - JSON of satellite info including 'satid'
+        
+        'passes'- list of passes JSON with 'startUTC' and 'endUTC'
         
         Returns:
             list[dict]: A list of passes with `norad_id`, `start_time` and `end_time` keys"""
