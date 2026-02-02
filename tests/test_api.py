@@ -52,6 +52,7 @@ def test_register_satellite_duplicate_norad_id(client):
     second = client.post("/satellites/register", json=payload)
     assert second.status_code == 409
 
+# ===================== Passes =====================
 
 def test_passes_refresh_when_no_cache(client, monkeypatch):
     _clear_predicted_passes()
@@ -122,6 +123,29 @@ def test_passes_return_only_future(client, monkeypatch):
     assert response.status_code == 200
     passes = response.json()["passes"]
     assert all(p["start_time"] >= _utc_ts(now) for p in passes)
+
+
+def test_passes_response_fields(client, monkeypatch):
+    _clear_predicted_passes()
+    now = datetime.now(timezone.utc)
+    p_db.insert_n2yo_pass_return_id(
+        s_id=1,
+        gs_id=1,
+        start_time=_utc_ts(now + timedelta(hours=1)),
+        end_time=_utc_ts(now + timedelta(hours=13)),
+    )
+
+    def fail_get_passes(*args, **kwargs):
+        pytest.fail("N2YO should not be called for this test")
+
+    monkeypatch.setattr(passes_module, "get_passes_from_n2yo", fail_get_passes)
+
+    response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
+    assert response.status_code == 200
+    passes = response.json()["passes"]
+    assert len(passes) >= 1
+    required = {"pass_id", "gs_id", "norad_id", "start_time", "end_time", "source"}
+    assert required.issubset(passes[0].keys())
 
 
 def test_passes_missing_gs(client):
