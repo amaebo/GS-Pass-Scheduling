@@ -32,8 +32,11 @@ def fetch_all(query: str, params: tuple | None = None) -> list[sqlite3.Row] | No
         conn.close()
 
 
-def execute_row_id(query: str, params: tuple | None = None) -> int:
-    """Run a write query and return the last inserted row id."""
+def execute_row_id(query: str, params: tuple | None = None) -> int | None:
+    """Run a write query and return the last inserted row id.
+    
+    Returns None if no item inserted and the query used had an IGNORE keyword
+    """
     conn = db_connect()
     try:
         cur = conn.execute(query, params or ())
