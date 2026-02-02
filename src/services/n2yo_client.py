@@ -15,8 +15,6 @@ def get_passes_from_n2yo(
     days: int = 1,
 ) -> list[dict]:
     """Send N2YO API request to get passes.
-
-    Returns parsed JSON response from NY2O API.
     """
     if not N2YO_API_KEY:
         raise HTTPException(status_code=500, detail="N2YO API key is not configured.")
