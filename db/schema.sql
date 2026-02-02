@@ -111,7 +111,6 @@ CREATE TABLE IF NOT EXISTS reservations (
         ON DELETE CASCADE 
         ON UPDATE CASCADE,
     FOREIGN KEY (pass_id) REFERENCES predicted_passes(pass_id)
-        ON DELETE CASCADE
         ON UPDATE CASCADE,
     FOREIGN KEY (gs_id) REFERENCES ground_stations(gs_id)
         ON DELETE CASCADE 
