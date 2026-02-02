@@ -8,7 +8,6 @@ def fetch_one(query: str, params: tuple | None = None) -> sqlite3.Row | None:
     try:
         cur = conn.execute(query, params or ())
         row = cur.fetchone()
-        conn.commit()
         return row
     except sqlite3.Error:
         conn.rollback()
@@ -23,7 +22,6 @@ def fetch_all(query: str, params: tuple | None = None) -> list[sqlite3.Row] | No
     try:
         cur = conn.execute(query, params or ())
         rows = cur.fetchall()
-        conn.commit()
         return rows
     except sqlite3.Error:
         conn.rollback()
