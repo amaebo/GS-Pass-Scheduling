@@ -102,8 +102,6 @@ CREATE TABLE IF NOT EXISTS reservations (
     -- traceability to predicted_passes
     gs_id INTEGER NOT NULL,
     s_id INTEGER NOT NULL,
-    start_time TIMESTAMP NOT NULL,
-    end_time TIMESTAMP NOT NULL,
     cancelled_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
