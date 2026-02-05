@@ -30,7 +30,7 @@ def view_pass(norad_id: int, gs_id: int):
     if not satellite:
         raise HTTPException(status_code=404, detail="Satellite not found.")
 
-    # Determine whether pass cache is stale
+    # Determine whether pass cache/database is stale
     now_utc = datetime.now(timezone.utc)
     refresh_threshold = now_utc + timedelta(hours=12)
 
