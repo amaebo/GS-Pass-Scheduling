@@ -25,3 +25,8 @@ class MissionUpdate(BaseModel):
     mission_name: str | None = Field(None, min_length=1)
     owner: str | None = None
     priority: str | None = None
+
+class ReservationCreate(BaseModel):
+    pass_id: int = Field(..., gt=0)
+    mission_id: int | None = Field(None, gt=0)
+    commands: list[str] = Field(default_factory=list)
