@@ -77,7 +77,7 @@ def view_pass(norad_id: int, gs_id: int):
 
     # Housekeeping: remove expired passes
     try:
-        exp_delete_count = p_db.delete_expired_passes()
+        exp_delete_count = p_db.delete_unreserved_expired_passes()
         logger.info(f"{exp_delete_count} expired passes deleted from cache.")
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Expired passes could not be deleted")

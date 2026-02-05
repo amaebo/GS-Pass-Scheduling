@@ -55,7 +55,7 @@ def delete_pass_by_pass_id(pass_id: int):
         """
     return execute_rowcount(query, (pass_id,))
 
-def delete_expired_passes():
+def delete_unreserved_expired_passes():
     query = """
             DELETE FROM predicted_passes
             WHERE start_time < CURRENT_TIMESTAMP
