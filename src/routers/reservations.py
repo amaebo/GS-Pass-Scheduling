@@ -20,29 +20,44 @@ def create_reservation(reservation:ReservationCreate):
     pass_info = p_db.get_pass_from_pass_id(pass_id)
     gs_id = pass_info["gs_id"]
     s_id = pass_info["s_id"]
-
-    # if client gives mission, check if satellite in pass is part of the misison 
-    
+    sat = sat_db.get_satellite_by_id(s_id)
+    # if client gives mission, check if mission exists and if satellite is in mission
     if mission_id:
         #check if mission exists
         if not m_db.check_mission_exists(mission_id):
             raise HTTPException(status_code=404, detail= f"Mission ({mission_id}) not be found")
         
-        #check if satellite in pass is part of mission 
-        sat = sat_db.get_satellite_by_id(s_id)
-
+        #check if satellite is in mission 
         if not m_db.check_sat_exist_in_mission(s_id,mission_id):
             raise HTTPException(status_code= 404, detail= f"Satellite ({sat["norad_id"]}) not found in mission. Add satellite to misison to reserve this pass to mission.")
+    
+    # add reservation to database
+    try:
+        r_id = r_db.insert_reservation(pass_id, gs_id, s_id, mission_id)
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Reservation could not be made.")
 
-    r_id = r_db.insert_reservation(pass_id, gs_id, s_id, mission_id)
-
-    #add commands
+    #add commands to reservation
     if commands:
-            for command in reservation.commands:
-                try:
-                    r_db.add_command_to_reservation(r_id, command)
-                except sqlite3.Error:
-                     raise HTTPException (status_code=500, detail= f"Failed to add '{command}' command to reservation. Please make you choose commands from the catalog. ")
+        for command in reservation.commands:
+            try:
+                r_db.add_command_to_reservation(r_id, command)
+            except sqlite3.Error:
+                    raise HTTPException (status_code=500, detail= f"Failed to add '{command}' command to reservation. Please make you choose commands from the catalog. ")
 
-            
+    reservation_info = r_db.get_reservation_by_r_id(r_id)
+    commands = r_db.get_reservation_commands_by_r_id(r_id)
+    command_list = [command["command_type"] for command in commands]
+
+    return{
+        "msg": "Pass has been reserved.",
+        "Reservation": {"r_id": r_id,
+                       "mission_id": mission_id,
+                       "pass_id": pass_id,
+                       "gs_id": reservation_info["gs_id"],
+                       "norad_id": sat["norad_id"],
+                       "start_time": pass_info["start_time"],
+                       "end_time": pass_info["end_time"],
+                       "commands": command_list,
+                       "created_at":reservation_info["created_at"]} }
 
