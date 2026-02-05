@@ -65,6 +65,8 @@ def test_passes_refresh_when_no_cache(client, monkeypatch):
             "norad_id": 25544,
             "start_time": _utc_ts(now + timedelta(hours=1)),
             "end_time": _utc_ts(now + timedelta(hours=2)),
+            "max_elevation": 45.0,
+            "duration": 600,
         },
     ]
 
@@ -86,6 +88,8 @@ def test_passes_no_refresh_when_cache_fresh(client, monkeypatch):
     p_db.insert_n2yo_pass_return_id(
         s_id=1,
         gs_id=1,
+        max_elevation=45.0,
+        duration=600,
         start_time=_utc_ts(now + timedelta(hours=1)),
         end_time=_utc_ts(now + timedelta(hours=13)),
     )
@@ -105,12 +109,16 @@ def test_passes_return_only_future(client, monkeypatch):
     p_db.insert_n2yo_pass_return_id(
         s_id=1,
         gs_id=1,
+        max_elevation=10.0,
+        duration=300,
         start_time=_utc_ts(now - timedelta(hours=2)),
         end_time=_utc_ts(now - timedelta(hours=1)),
     )
     p_db.insert_n2yo_pass_return_id(
         s_id=1,
         gs_id=1,
+        max_elevation=45.0,
+        duration=600,
         start_time=_utc_ts(now + timedelta(hours=1)),
         end_time=_utc_ts(now + timedelta(hours=13)),
     )
@@ -132,6 +140,8 @@ def test_passes_response_fields(client, monkeypatch):
     p_db.insert_n2yo_pass_return_id(
         s_id=1,
         gs_id=1,
+        max_elevation=45.0,
+        duration=600,
         start_time=_utc_ts(now + timedelta(hours=1)),
         end_time=_utc_ts(now + timedelta(hours=13)),
     )

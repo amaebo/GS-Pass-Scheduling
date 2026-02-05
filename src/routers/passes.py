@@ -61,8 +61,10 @@ def view_pass(norad_id: int, gs_id: int):
                 pass_id = p_db.insert_n2yo_pass_return_id(
                     satellite["s_id"],
                     gs["gs_id"],
+                    p["max_elevation"],
+                    p["duration"],
                     p["start_time"],
-                    p["end_time"],
+                    p["end_time"]
                 )
                 if pass_id:
                     pass_ids.append(pass_id)

@@ -4,15 +4,28 @@ from db.db_query import execute_row_id, execute_rowcount, fetch_one, fetch_all
 def insert_n2yo_pass_return_id(
     s_id: int,
     gs_id: int,
+    max_elevation: float,
+    duration: int,
     start_time: str,
     end_time: str,
 ) -> int | None:
     # IGNORE keyword in query handles duplicate entries by ignoring them.
     query = """
-            INSERT OR IGNORE INTO predicted_passes (s_id, gs_id, start_time, end_time, source)
-            VALUES (?, ?, ?, ?, ?)  
+            INSERT OR IGNORE INTO predicted_passes (
+                s_id,
+                gs_id,
+                max_elevation,
+                duration,
+                start_time,
+                end_time,
+                source
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """
-    rowcount = execute_rowcount(query, (s_id, gs_id, start_time, end_time, "n2yo"))
+    rowcount = execute_rowcount(
+        query,
+        (s_id, gs_id, max_elevation, duration, start_time, end_time, "n2yo"),
+    )
     if not rowcount:
         return None
     row = get_pass_id(gs_id, s_id, start_time, end_time)

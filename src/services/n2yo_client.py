@@ -44,16 +44,16 @@ def get_passes_from_n2yo(
 
 def normalize_n2yo_passes(res: httpx.Response) -> list[dict]:
     """
-    Convert N2YO pass times from Unix seconds to UTC ISO timestamps.
+    Extracts key information from N2YO API response passes, including time conversion.
         
         Expected API keys:
 
         'info' - JSON of satellite info including 'satid'
         
-        'passes'- list of passes JSON with 'startUTC' and 'endUTC'
+        'passes'- list of passes JSON with 'startUTC', 'endUTC', `duration` and `maxEl`
         
         Returns:
-            list[dict]: A list of passes with `norad_id`, `start_time` and `end_time` keys"""
+            list[dict]: A list of passes with `norad_id`, `start_time`, `end_time`, `max_elavation` and `duration` keys"""
     data = res.json()
     raw_passes = data.get("passes", [])
     norad_id = data.get("info")["satid"]
@@ -64,15 +64,23 @@ def normalize_n2yo_passes(res: httpx.Response) -> list[dict]:
         try:
             start_unix_time = p["startUTC"]
             end_unix_time = p["endUTC"]
+            max_el = p["maxEl"]
+            duration = p["duration"]
             norad_id = data.get("info")["satid"]
+
         except KeyError as e:
           missing = e.args[0]
           raise HTTPException(status_code=502, detail=f"N2YO API service response missing '{missing}'")
 
+        start_ts = datetime.fromtimestamp(start_unix_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        end_ts = datetime.fromtimestamp(end_unix_time, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
         normalized_passes.append({
             "norad_id": norad_id,
-            "start_time": datetime.fromtimestamp(start_unix_time, tz=timezone.utc).isoformat(sep=" "),
-            "end_time": datetime.fromtimestamp(end_unix_time, tz=timezone.utc).isoformat(sep=" "),
+            "max_elevation": max_el,
+            "duration" : duration,
+            "start_time": start_ts,
+            "end_time": end_ts
             })
 
     return normalized_passes
