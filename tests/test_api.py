@@ -17,6 +17,7 @@ def _utc_ts(dt: datetime) -> str:
 def _clear_predicted_passes():
     conn = db_init.db_connect()
     try:
+        conn.execute("DELETE FROM reservations")
         conn.execute("DELETE FROM predicted_passes;")
         conn.commit()
     finally:
