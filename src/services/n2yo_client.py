@@ -66,7 +66,6 @@ def normalize_n2yo_passes(res: httpx.Response) -> list[dict]:
             end_unix_time = p["endUTC"]
             max_el = p["maxEl"]
             duration = p["duration"]
-            norad_id = data.get("info")["satid"]
 
         except KeyError as e:
           missing = e.args[0]
@@ -78,7 +77,7 @@ def normalize_n2yo_passes(res: httpx.Response) -> list[dict]:
         normalized_passes.append({
             "norad_id": norad_id,
             "max_elevation": max_el,
-            "duration" : duration,
+            "duration": duration,
             "start_time": start_ts,
             "end_time": end_ts
             })
