@@ -72,8 +72,8 @@ CREATE TABLE IF NOT EXISTS predicted_passes (
     s_id INTEGER NOT NULL,
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
-    max_elevation REAL,
-    duration INTEGER,
+    max_elevation REAL NOT NULL,
+    duration INTEGER NOT NULL,
     source TEXT NOT NULL,
     -- ('n2yo'|'skyfield')
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
