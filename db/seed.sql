@@ -298,74 +298,50 @@ INSERT INTO reservation_commands (
         rc_id,
         r_id,
         command_type,
-        execution_time,
-        status,
-        created_at,
-        updated_at
-    )
+        created_at
+)
 VALUES -- Reservation 1 (ISS) - normal flow
     (
         1,
         1,
         'PING',
-        '2026-01-30 13:03:00',
-        'QUEUED',
-        '2026-01-29 19:12:00',
         '2026-01-29 19:12:00'
     ),
     (
         2,
         1,
         'GET_TELEMETRY',
-        '2026-01-30 13:04:30',
-        'PLANNED',
-        '2026-01-29 19:12:30',
-        NULL
+        '2026-01-29 19:12:30'
     ),
     (
         3,
         1,
         'SET_MODE_SAFE',
-        '2026-01-30 13:06:00',
-        'PLANNED',
-        '2026-01-29 19:13:00',
-        NULL
+        '2026-01-29 19:13:00'
     ),
     -- Reservation 2 (NOAA) was cancelled, so commands are cancelled too
     (
         4,
         2,
         'PING',
-        '2026-01-30 22:06:00',
-        'CANCELLED',
-        '2026-01-29 19:22:00',
-        '2026-01-29 20:00:00'
+        '2026-01-29 19:22:00'
     ),
     (
         5,
         2,
         'GET_TELEMETRY',
-        '2026-01-30 22:08:00',
-        'CANCELLED',
-        '2026-01-29 19:22:30',
-        '2026-01-29 20:00:00'
+        '2026-01-29 19:22:30'
     ),
     -- Reservation 3 (AQUA) - some progress statuses
     (
         6,
         3,
         'START_PAYLOAD',
-        '2026-02-01 04:20:00',
-        'SENT',
-        '2026-01-29 19:26:00',
-        '2026-01-29 19:40:00'
+        '2026-01-29 19:26:00'
     ),
     (
         7,
         3,
         'DOWNLINK',
-        '2026-02-01 04:25:00',
-        'PLANNED',
-        '2026-01-29 19:26:30',
-        NULL
+        '2026-01-29 19:26:30'
     );
