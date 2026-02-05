@@ -105,7 +105,7 @@ def check_mission_exists(mission_id: int) -> bool:
 def check_sat_exist_in_mission(s_id: int, mission_id:int):
     query = """
             SELECT 1
-            FROM missions
+            FROM mission_satellites
             WHERE s_id = ? and mission_id = ?
         """
     return True if fetch_one(query,(s_id, mission_id)) else False
