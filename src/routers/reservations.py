@@ -1,11 +1,33 @@
 from fastapi import APIRouter, HTTPException
 import sqlite3
+from datetime import datetime, timezone
+
 from src.schemas import ReservationCreate
 import db.passes_db as p_db
 import db.missions_db as m_db
 import db.satellites_db as sat_db
 import db.reservations_db as r_db
+
 router = APIRouter()
+
+def compute_reservation_status(r_id: int):
+    pass_id = p_db.get_pass_id_from_r_id
+    p = p_db.get_pass_from_pass_id(pass_id)
+    reservation = r_db.get_reservation_by_r_id(r_id)
+    start_time = datetime.strptime(p["start_time"],"%Y-%m-%d %H:%M:%S")
+    end_time = datetime.strptime(p["end_time"],"%Y-%m-%d %H:%M:%S")
+    cur_time = datetime.now(timezone.utc)
+    
+    if reservation["cancelled_at"]:
+        status = "CANCELLED"
+    elif start_time > cur_time:
+        status = "RESERVED"
+    elif start_time < cur_time and end_time > cur_time:
+        status = "ACTIVE"
+    elif end_time < cur_time:
+        status = "COMPLETE"
+    
+    return status
 
 @router.post("/reservations")
 def create_reservation(reservation:ReservationCreate):
