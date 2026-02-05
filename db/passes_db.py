@@ -121,3 +121,12 @@ def check_claimable_pass(pass_id: int) -> bool:
             )
         """
     return True if fetch_one(query, (pass_id,)) else False
+
+def get_pass_id_from_r_id(r_id: int):
+    query = """
+            SELECT pass_id
+            FROM reservations
+            WHERE r_id = ?
+        """
+    
+    return fetch_one(query, (r_id,))
