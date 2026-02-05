@@ -84,3 +84,27 @@ def get_all_expired_passes():
             WHERE start_time < CURRENT_TIMESTAMP
         """
     return fetch_all(query)
+
+
+def get_pass_from_pass_id (pass_id: int):
+    query = """
+            SELECT *
+            FROM predicted_passes
+            WHERE pass_id = ?
+        """
+    return fetch_one(query,(pass_id,))
+
+def check_claimable_pass(pass_id: int) -> bool:
+    query = """
+            SELECT 1
+            FROM predicted_passes
+            WHERE pass_id = ?
+            AND start_time > datetime('now', '+2 seconds')
+            AND NOT EXISTS (
+                SELECT 1
+                FROM reservations r
+                WHERE r.pass_id = predicted_passes.pass_id
+                    AND r.cancelled_at IS NULL
+            )
+        """
+    return True if fetch_one(query, (pass_id,)) else False
