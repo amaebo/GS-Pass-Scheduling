@@ -37,7 +37,7 @@ def create_reservation(reservation:ReservationCreate):
     
     # check if pass_id exists and is claimable
     if not p_db.check_claimable_pass(pass_id):
-        raise HTTPException(status_code= 404, details= "Pass ID not found")
+        raise HTTPException(status_code=404, detail="Pass ID not found")
     
     pass_info = p_db.get_pass_from_pass_id(pass_id)
     gs_id = pass_info["gs_id"]
@@ -50,8 +50,15 @@ def create_reservation(reservation:ReservationCreate):
             raise HTTPException(status_code=404, detail= f"Mission ({mission_id}) not be found")
         
         #check if satellite is in mission 
-        if not m_db.check_sat_exist_in_mission(s_id,mission_id):
-            raise HTTPException(status_code= 404, detail= f"Satellite ({sat["norad_id"]}) not found in mission. Add satellite to misison to reserve this pass to mission.")
+        if not m_db.check_sat_exist_in_mission(s_id, mission_id):
+            norad_id = sat["norad_id"]
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"Satellite ({norad_id}) not found in mission. "
+                    "Add satellite to mission to reserve this pass to mission."
+                ),
+            )
     
     # add reservation to database
     try:
@@ -82,4 +89,3 @@ def create_reservation(reservation:ReservationCreate):
                        "end_time": pass_info["end_time"],
                        "commands": command_list,
                        "created_at":reservation_info["created_at"]} }
-

@@ -8,12 +8,12 @@ def insert_reservation(pass_id: int, gs_id: int, s_id: int, mission_id: int | No
     return execute_row_id(query, (mission_id, pass_id, gs_id, s_id))
     
 
-def add_command_to_reservation(r_id: int, command: list[str] | None):
+def add_command_to_reservation(r_id: int, command: str):
     query = """
             INSERT INTO reservation_commands (r_id, command_type)
             VALUES (?, ?)
         """
-    return execute_row_id(query,(r_id, command))
+    return execute_row_id(query, (r_id, command))
 
 def get_reservation_by_r_id(r_id: int):
     query = """
