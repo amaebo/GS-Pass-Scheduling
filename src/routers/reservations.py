@@ -68,11 +68,11 @@ def create_reservation(reservation:ReservationCreate):
 
     #add commands to reservation
     if commands:
-        for command in reservation.commands:
-            try:
+        try:
+            for command in reservation.commands:
                 r_db.add_command_to_reservation(r_id, command)
-            except sqlite3.Error:
-                    raise HTTPException (status_code=500, detail= f"Failed to add '{command}' command to reservation. Please make you choose commands from the catalog. ")
+        except sqlite3.Error:
+                raise HTTPException (status_code=500, detail= f"Failed to add '{command}' command to reservation. Please make you choose commands from the catalog. ")
 
     reservation_info = r_db.get_reservation_by_r_id(r_id)
     commands = r_db.get_reservation_commands_by_r_id(r_id)
