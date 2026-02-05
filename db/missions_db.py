@@ -93,3 +93,19 @@ def delete_sat_from_mission(mission_id: int, s_id:int):
         """
     
     return execute_rowcount(query, (mission_id, s_id))
+
+def check_mission_exists(mission_id: int) -> bool:
+    query = """
+            SELECT 1
+            FROM missions
+            WHERE mission_id = ?
+        """
+    return True if fetch_one(query,(mission_id,)) else False
+
+def check_sat_exist_in_mission(s_id: int, mission_id:int):
+    query = """
+            SELECT 1
+            FROM missions
+            WHERE s_id = ? and mission_id = ?
+        """
+    return True if fetch_one(query,(s_id, mission_id)) else False
