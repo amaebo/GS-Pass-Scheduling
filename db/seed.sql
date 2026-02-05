@@ -253,8 +253,6 @@ INSERT INTO reservations (
         pass_id,
         gs_id,
         s_id,
-        start_time,
-        end_time,
         cancelled_at,
         created_at,
         updated_at
@@ -266,8 +264,6 @@ VALUES -- Active reservation for ISS pass 1, tied to mission 1
         1,
         1,
         1,
-        '2026-01-30 13:02:00',
-        '2026-01-30 13:10:30',
         NULL,
         '2026-01-29 19:10:00',
         '2026-01-29 19:15:00'
@@ -279,8 +275,6 @@ VALUES -- Active reservation for ISS pass 1, tied to mission 1
         5,
         1,
         3,
-        '2026-01-30 22:05:30',
-        '2026-01-30 22:14:10',
         '2026-01-29 20:00:00',
         '2026-01-29 19:20:00',
         '2026-01-29 20:00:00'
@@ -292,8 +286,6 @@ VALUES -- Active reservation for ISS pass 1, tied to mission 1
         4,
         2,
         2,
-        '2026-02-01 04:18:00',
-        '2026-02-01 04:27:00',
         NULL,
         '2026-01-29 19:25:00',
         '2026-01-29 19:30:00'

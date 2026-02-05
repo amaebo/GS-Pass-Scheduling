@@ -115,8 +115,7 @@ CREATE TABLE IF NOT EXISTS reservations (
         ON UPDATE CASCADE,
     FOREIGN KEY (s_id) REFERENCES satellites(s_id)
         ON DELETE CASCADE 
-        ON UPDATE CASCADE,
-    CHECK (end_time > start_time)
+        ON UPDATE CASCADE
 );
 -- =========================
 -- Commands scheduled within a reservation
@@ -145,8 +144,6 @@ CREATE INDEX IF NOT EXISTS idx_passes_by_sat_time ON predicted_passes (s_id, sta
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_pass ON predicted_passes (s_id, gs_id, start_time, source);
 -- Reservation queries
 CREATE INDEX IF NOT EXISTS idx_reservations_by_mission ON reservations (mission_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_reservations_by_gs_time ON reservations (gs_id, start_time);
-CREATE INDEX IF NOT EXISTS idx_reservations_by_sat_time ON reservations (s_id, start_time);
 CREATE INDEX IF NOT EXISTS idx_commands_by_reservation_time ON reservation_commands (r_id, execution_time);
 -- Enforce one ACTIVE reservation per pass (cancelled reservations don't block)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_active_reservation_per_pass ON reservations (pass_id)
