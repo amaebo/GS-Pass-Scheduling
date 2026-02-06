@@ -44,7 +44,7 @@ def get_latest_pass_end_time(gs_id: int, s_id: int):
 
 
 def get_claimable_passes(s_id:int, gs_id:int):
-    #claimable passes are unreserved, non‑expired passes
+    #claimable passes are unreserved/non-cancelled, non‑expired passes
     query = """
             SELECT p.pass_id, p.gs_id, s.norad_id, p.start_time, p.end_time, p.source
             FROM predicted_passes as p
