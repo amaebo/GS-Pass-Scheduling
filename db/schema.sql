@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS predicted_passes (
     source TEXT NOT NULL,
     -- ('n2yo'|'skyfield')
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (gs_id) REFERENCES ground_stations(gs_id),
-    FOREIGN KEY (s_id) REFERENCES satellites(s_id),
+    FOREIGN KEY (gs_id) REFERENCES ground_stations(gs_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (s_id) REFERENCES satellites(s_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CHECK (end_time > start_time),
     UNIQUE (gs_id, s_id, start_time, end_time)
 );
