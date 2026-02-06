@@ -197,7 +197,7 @@ def cancel_reservation_by_r_id(r_id: int):
 
 def delete_cancelled_expired_passes():
     query = """
-            DELETE FROM reservations r
+            DELETE FROM reservations
             WHERE cancelled_at IS NOT NULL
                 AND r_id IN (SELECT r_id
                             FROM reservations
