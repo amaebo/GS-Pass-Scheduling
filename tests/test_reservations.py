@@ -213,3 +213,74 @@ def test_cancel_reservation(client):
 def test_cancel_reservation_not_found(client):
     response = client.post("/reservations/999999/cancel")
     assert response.status_code == 404
+
+
+def test_cancel_then_reserve_same_pass_again(client):
+    _clear_reservation_data()
+    pass_id = _create_future_pass()
+
+    first = client.post("/reservations", json={"pass_id": pass_id})
+    assert first.status_code == 200
+    r_id = first.json()["Reservation"]["r_id"]
+
+    cancel = client.post(f"/reservations/{r_id}/cancel")
+    assert cancel.status_code == 200
+
+    second = client.post("/reservations", json={"pass_id": pass_id})
+    assert second.status_code == 200
+
+
+def test_pass_removed_and_restored_in_passes_list_on_cancel(client):
+    _clear_reservation_data()
+    pass_id = _create_future_pass()
+
+    before = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
+    assert before.status_code == 200
+    before_ids = {p["pass_id"] for p in before.json()["passes"]}
+    assert pass_id in before_ids
+
+    reserve = client.post("/reservations", json={"pass_id": pass_id})
+    assert reserve.status_code == 200
+    r_id = reserve.json()["Reservation"]["r_id"]
+
+    during = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
+    assert during.status_code == 200
+    during_ids = {p["pass_id"] for p in during.json()["passes"]}
+    assert pass_id not in during_ids
+
+    cancel = client.post(f"/reservations/{r_id}/cancel")
+    assert cancel.status_code == 200
+
+    after = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
+    assert after.status_code == 200
+    after_ids = {p["pass_id"] for p in after.json()["passes"]}
+    assert pass_id in after_ids
+
+
+def test_multiple_cancelled_reservations_allowed_one_active(client):
+    _clear_reservation_data()
+    pass_id = _create_future_pass()
+
+    first = client.post("/reservations", json={"pass_id": pass_id})
+    assert first.status_code == 200
+    r_id_1 = first.json()["Reservation"]["r_id"]
+
+    cancel_1 = client.post(f"/reservations/{r_id_1}/cancel")
+    assert cancel_1.status_code == 200
+
+    second = client.post("/reservations", json={"pass_id": pass_id})
+    assert second.status_code == 200
+    r_id_2 = second.json()["Reservation"]["r_id"]
+    assert r_id_2 != r_id_1
+
+    cancel_2 = client.post(f"/reservations/{r_id_2}/cancel")
+    assert cancel_2.status_code == 200
+
+    third = client.post("/reservations", json={"pass_id": pass_id})
+    assert third.status_code == 200
+    r_id_3 = third.json()["Reservation"]["r_id"]
+    assert r_id_3 not in {r_id_1, r_id_2}
+
+    # A second active reservation should be blocked.
+    blocked = client.post("/reservations", json={"pass_id": pass_id})
+    assert blocked.status_code == 409
