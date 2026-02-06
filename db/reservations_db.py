@@ -1,7 +1,7 @@
 from db.db_query import fetch_one, fetch_all
 from db.db_init import db_connect
 
-def get_reservations_with_details(include_cancelled: bool = False):
+def get_all_reservations_with_details(include_cancelled: bool = False):
     if include_cancelled:
         query = """
             SELECT

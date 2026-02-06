@@ -10,7 +10,7 @@ import db.commands_db as c_db
 
 router = APIRouter()
 
-
+#create a reservation
 @router.post("/reservations")
 def create_reservation(reservation:ReservationCreate):
     pass_id = reservation.pass_id
@@ -91,12 +91,12 @@ def create_reservation(reservation:ReservationCreate):
                         "commands": command_list,
                         "created_at":reservation_info["created_at"]} }
 
-#view all registrations 
+#view all reservations 
 @router.get("/reservations")
 def view_reservations(include_cancelled: bool = False):
     #get reservations and commands
     try:
-        reservations = r_db.get_reservations_with_details(include_cancelled=include_cancelled)
+        reservations = r_db.get_all_reservations_with_details(include_cancelled=include_cancelled)
         commands_rows = r_db.get_reservation_commands_grouped()
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Unable to get reservations")
@@ -129,7 +129,8 @@ def view_reservations(include_cancelled: bool = False):
     return {
         "reservations": reservation_list
     }
-# view all registraion for a given mission 
+
+# view all reservations for a given mission 
 @router.get("/reservations/{mission_id}")
 def view_mission_reservations(mission_id: int, include_cancelled: bool = False):
     try:
