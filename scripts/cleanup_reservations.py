@@ -1,3 +1,4 @@
+"""Script to remove expired, cancelled reservations. Plan to run script with job scheduler (Cron)"""
 from __future__ import annotations
 
 import logging
