@@ -128,9 +128,61 @@ def create_reservation_with_commands(
         raise
     finally:
         conn.close()
-    query = """
-            SELECT command_type
-            FROM reservation_commands
-            WHERE r_id = ?
+    
+
+def get_reservations_with_details_by_mission_id(
+    mission_id: int, include_cancelled: bool = False
+):
+    if include_cancelled:
+        query = """
+            SELECT
+                r.r_id,
+                r.mission_id,
+                r.pass_id,
+                r.gs_id,
+                s.norad_id,
+                p.start_time,
+                p.end_time,
+                r.created_at,
+                r.cancelled_at,
+                CASE
+                    WHEN r.cancelled_at IS NOT NULL THEN 'CANCELLED'
+                    WHEN p.start_time > CURRENT_TIMESTAMP THEN 'RESERVED'
+                    WHEN p.start_time <= CURRENT_TIMESTAMP AND p.end_time >= CURRENT_TIMESTAMP THEN 'ACTIVE'
+                    WHEN p.end_time < CURRENT_TIMESTAMP THEN 'COMPLETE'
+                    ELSE 'UNKNOWN'
+                END AS status
+            FROM reservations r
+            JOIN predicted_passes p ON p.pass_id = r.pass_id
+            JOIN satellites s ON s.s_id = r.s_id
+            WHERE r.mission_id = ?
+            ORDER BY r.created_at DESC
         """
-    return fetch_all(query,(r_id,))
+        return fetch_all(query, (mission_id,))
+
+    query = """
+        SELECT
+            r.r_id,
+            r.mission_id,
+            r.pass_id,
+            r.gs_id,
+            s.norad_id,
+            p.start_time,
+            p.end_time,
+            r.created_at,
+            r.cancelled_at,
+            CASE
+                WHEN r.cancelled_at IS NOT NULL THEN 'CANCELLED'
+                WHEN p.start_time > CURRENT_TIMESTAMP THEN 'RESERVED'
+                WHEN p.start_time <= CURRENT_TIMESTAMP AND p.end_time >= CURRENT_TIMESTAMP THEN 'ACTIVE'
+                WHEN p.end_time < CURRENT_TIMESTAMP THEN 'COMPLETE'
+                ELSE 'UNKNOWN'
+            END AS status
+        FROM reservations r
+        JOIN predicted_passes p ON p.pass_id = r.pass_id
+        JOIN satellites s ON s.s_id = r.s_id
+        WHERE r.mission_id = ?
+          AND r.cancelled_at IS NULL
+        ORDER BY r.created_at DESC
+    """
+    return fetch_all(query, (mission_id,))

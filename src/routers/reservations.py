@@ -1,33 +1,15 @@
 from fastapi import APIRouter, HTTPException
 import sqlite3
-from datetime import datetime, timezone
 
 from src.schemas import ReservationCreate
 import db.passes_db as p_db
 import db.missions_db as m_db
 import db.satellites_db as sat_db
 import db.reservations_db as r_db
+import db.commands_db as c_db
 
 router = APIRouter()
 
-def compute_reservation_status(r_id: int):
-    pass_id = p_db.get_pass_id_from_r_id
-    p = p_db.get_pass_from_pass_id(pass_id)
-    reservation = r_db.get_reservation_by_r_id(r_id)
-    start_time = datetime.strptime(p["start_time"],"%Y-%m-%d %H:%M:%S")
-    end_time = datetime.strptime(p["end_time"],"%Y-%m-%d %H:%M:%S")
-    cur_time = datetime.now(timezone.utc)
-    
-    if reservation["cancelled_at"]:
-        status = "CANCELLED"
-    elif start_time > cur_time:
-        status = "RESERVED"
-    elif start_time < cur_time and end_time > cur_time:
-        status = "ACTIVE"
-    elif end_time < cur_time:
-        status = "COMPLETE"
-    
-    return status
 
 @router.post("/reservations")
 def create_reservation(reservation:ReservationCreate):
@@ -147,6 +129,41 @@ def view_reservations(include_cancelled: bool = False):
     return {
         "reservations": reservation_list
     }
+# view all registraion for a given mission 
+@router.get("/reservations/{mission_id}")
+def view_mission_reservations(mission_id: int, include_cancelled: bool = False):
+    try:
+        reservations = r_db.get_reservations_with_details_by_mission_id(
+            mission_id=mission_id,
+            include_cancelled=include_cancelled,
+        )
+        commands_rows = r_db.get_reservation_commands_grouped()
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Unable to get reservations")
+
+    commands_by_rid: dict[int, list[str]] = {}
+    for row in commands_rows:
+        commands = row["commands"].split(",") if row["commands"] else []
+        commands_by_rid[row["r_id"]] = commands
+
+    reservation_list = []
+    for reservation in reservations:
+        r_id = reservation["r_id"]
+        reservation_list.append(
+            {
+                "r_id": r_id,
+                "mission_id": reservation["mission_id"],
+                "pass_id": reservation["pass_id"],
+                "gs_id": reservation["gs_id"],
+                "norad_id": reservation["norad_id"],
+                "start_time": reservation["start_time"],
+                "end_time": reservation["end_time"],
+                "commands": commands_by_rid.get(r_id, []),
+                "status": reservation["status"],
+                "created_at": reservation["created_at"],
+            }
+        )
+
     return {
         "reservations": reservation_list
     }
