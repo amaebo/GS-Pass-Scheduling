@@ -108,3 +108,45 @@ def create_reservation(reservation:ReservationCreate):
                        "end_time": reservation_info["end_time"],
                         "commands": command_list,
                         "created_at":reservation_info["created_at"]} }
+
+#view all registrations 
+@router.get("/reservations")
+def view_reservations(include_cancelled: bool = False):
+    #get reservations and commands
+    try:
+        reservations = r_db.get_reservations_with_details(include_cancelled=include_cancelled)
+        commands_rows = r_db.get_reservation_commands_grouped()
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Unable to get reservations")
+
+    #create a dictionary of commands by r_id
+    commands_by_rid: dict[int, list[str]] = {}
+    for row in commands_rows:
+        commands = row["commands"].split(",") if row["commands"] else []
+        commands_by_rid[row["r_id"]] = commands
+
+    #build reservations info to send to client
+    reservation_list = []
+    for reservation in reservations:
+        r_id = reservation["r_id"]
+        reservation_list.append(
+            {
+                "r_id": r_id,
+                "mission_id": reservation["mission_id"],
+                "pass_id": reservation["pass_id"],
+                "gs_id": reservation["gs_id"],
+                "norad_id": reservation["norad_id"],
+                "start_time": reservation["start_time"],
+                "end_time": reservation["end_time"],
+                "commands": commands_by_rid.get(r_id, []),
+                "status": reservation["status"],
+                "created_at": reservation["created_at"],
+            }
+        )
+
+    return {
+        "reservations": reservation_list
+    }
+    return {
+        "reservations": reservation_list
+    }
