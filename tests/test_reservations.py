@@ -175,3 +175,41 @@ def test_create_reservation_with_commands_returns_commands(client):
 
     data = response.json()["Reservation"]
     assert set(data["commands"]) == {"PING", "DOWNLINK"}
+
+
+def test_get_reservations_excludes_cancelled(client):
+    response = client.get("/reservations")
+    assert response.status_code == 200
+    reservations = response.json()["reservations"]
+    assert all(r["status"] != "CANCELLED" for r in reservations)
+
+
+def test_get_reservations_include_cancelled(client):
+    response = client.get("/reservations", params={"include_cancelled": True})
+    assert response.status_code == 200
+    reservations = response.json()["reservations"]
+    assert any(r["status"] == "CANCELLED" for r in reservations)
+
+
+def test_get_reservations_by_mission(client):
+    response = client.get("/reservations/1")
+    assert response.status_code == 200
+    reservations = response.json()["reservations"]
+    assert len(reservations) >= 1
+    assert all(r["mission_id"] == 1 for r in reservations)
+
+
+def test_cancel_reservation(client):
+    response = client.post("/reservations/1/cancel")
+    assert response.status_code == 200
+
+    follow_up = client.get("/reservations", params={"include_cancelled": True})
+    assert follow_up.status_code == 200
+    reservations = follow_up.json()["reservations"]
+    cancelled = [r for r in reservations if r["r_id"] == 1]
+    assert cancelled and cancelled[0]["status"] == "CANCELLED"
+
+
+def test_cancel_reservation_not_found(client):
+    response = client.post("/reservations/999999/cancel")
+    assert response.status_code == 404
