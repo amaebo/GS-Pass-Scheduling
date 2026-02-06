@@ -35,19 +35,22 @@ def create_reservation(reservation:ReservationCreate):
     mission_id = reservation.mission_id
     commands = reservation.commands
     
-    # check if pass_id exists and is claimable
-    if not p_db.check_claimable_pass(pass_id):
+    if not p_db.pass_exists(pass_id):
         raise HTTPException(status_code=404, detail="Pass ID not found")
+    if p_db.pass_has_active_reservation(pass_id):
+        raise HTTPException(status_code=409, detail="Pass is already reserved")
+    if not p_db.pass_is_future(pass_id):
+        raise HTTPException(status_code=400, detail="Pass is no longer claimable")
     
     pass_info = p_db.get_pass_from_pass_id(pass_id)
     gs_id = pass_info["gs_id"]
     s_id = pass_info["s_id"]
     sat = sat_db.get_satellite_by_id(s_id)
     # if client gives mission, check if mission exists and if satellite is in mission
-    if mission_id:
+    if mission_id is not None:
         #check if mission exists
         if not m_db.check_mission_exists(mission_id):
-            raise HTTPException(status_code=404, detail= f"Mission ({mission_id}) not be found")
+            raise HTTPException(status_code=404, detail=f"Mission ({mission_id}) not found")
         
         #check if satellite is in mission 
         if not m_db.check_sat_exist_in_mission(s_id, mission_id):
@@ -60,32 +63,48 @@ def create_reservation(reservation:ReservationCreate):
                 ),
             )
     
-    # add reservation to database
+    # Check if commands are valid
+    if commands:
+        allowed = c_db.get_command_types()
+        invalid = [cmd for cmd in commands if cmd not in allowed]
+        if invalid:
+            invalid_list = ", ".join(invalid)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid command(s): {invalid_list}",
+            )
+        if len(commands) != len(set(commands)):
+            raise HTTPException(
+                status_code=400,
+                detail="Duplicate commands are not allowed",
+            )
+    #Create reservaion with commands
     try:
-        r_id = r_db.insert_reservation(pass_id, gs_id, s_id, mission_id)
+        r_id = r_db.create_reservation_with_commands(
+            pass_id=pass_id,
+            gs_id=gs_id,
+            s_id=s_id,
+            mission_id=mission_id,
+            commands=commands,
+        )
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Reservation could not be made.")
 
-    #add commands to reservation
-    if commands:
-        try:
-            for command in reservation.commands:
-                r_db.add_command_to_reservation(r_id, command)
-        except sqlite3.Error:
-                raise HTTPException (status_code=500, detail= f"Failed to add '{command}' command to reservation. Please make you choose commands from the catalog. ")
-
-    reservation_info = r_db.get_reservation_by_r_id(r_id)
-    commands = r_db.get_reservation_commands_by_r_id(r_id)
-    command_list = [command["command_type"] for command in commands]
-
+    reservation_info = r_db.get_reservation_with_details_by_r_id(r_id)
+    command_list = (
+        reservation_info["commands"].split(",")
+        if reservation_info and reservation_info["commands"]
+        else []
+    )
+    
     return{
         "msg": "Pass has been reserved.",
         "Reservation": {"r_id": r_id,
                        "mission_id": mission_id,
                        "pass_id": pass_id,
                        "gs_id": reservation_info["gs_id"],
-                       "norad_id": sat["norad_id"],
-                       "start_time": pass_info["start_time"],
-                       "end_time": pass_info["end_time"],
-                       "commands": command_list,
-                       "created_at":reservation_info["created_at"]} }
+                       "norad_id": reservation_info["norad_id"],
+                       "start_time": reservation_info["start_time"],
+                       "end_time": reservation_info["end_time"],
+                        "commands": command_list,
+                        "created_at":reservation_info["created_at"]} }

@@ -107,26 +107,29 @@ def get_pass_from_pass_id (pass_id: int):
         """
     return fetch_one(query,(pass_id,))
 
-def check_claimable_pass(pass_id: int) -> bool:
+def pass_exists(pass_id: int) -> bool:
     query = """
             SELECT 1
             FROM predicted_passes
             WHERE pass_id = ?
-            AND start_time > datetime('now', '+2 seconds')
-            AND NOT EXISTS (
-                SELECT 1
-                FROM reservations r
-                WHERE r.pass_id = predicted_passes.pass_id
-                    AND r.cancelled_at IS NULL
-            )
         """
     return True if fetch_one(query, (pass_id,)) else False
 
-def get_pass_id_from_r_id(r_id: int):
+def pass_is_future(pass_id: int) -> bool:
     query = """
-            SELECT pass_id
-            FROM reservations
-            WHERE r_id = ?
+            SELECT 1
+            FROM predicted_passes
+            WHERE pass_id = ?
+              AND start_time > datetime('now', '+2 seconds')
         """
-    
-    return fetch_one(query, (r_id,))
+    return True if fetch_one(query, (pass_id,)) else False
+
+def pass_has_active_reservation(pass_id: int) -> bool:
+    query = """
+            SELECT 1
+            FROM reservations r
+            WHERE r.pass_id = ?
+              AND r.cancelled_at IS NULL
+        """
+    return True if fetch_one(query, (pass_id,)) else False
+
