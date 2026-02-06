@@ -1,4 +1,4 @@
-from db.db_query import fetch_one, fetch_all
+from db.db_query import fetch_one, fetch_all, execute_rowcount
 from db.db_init import db_connect
 
 def get_all_reservations_with_details(include_cancelled: bool = False):
@@ -186,3 +186,22 @@ def get_reservations_with_details_by_mission_id(
         ORDER BY r.created_at DESC
     """
     return fetch_all(query, (mission_id,))
+
+def cancel_reservation_by_r_id(r_id: int):
+    query = """
+            UPDATE reservations
+            SET cancelled_at = CURRENT_TIMESTAMP
+            WHERE r_id = ?
+        """
+    return execute_rowcount(query, (r_id,))
+
+def delete_cancelled_expired_passes():
+    query = """
+            DELETE FROM reservations r
+            WHERE cancelled_at IS NOT NULL
+                AND r_id IN (SELECT r_id
+                            FROM reservations
+                            INNER JOIN predicted_passes ON reservations.pass_id= predicted_passes.pass_id
+                            WHERE end_time < CURRENT_TIMESTAMP)
+            """
+    return execute_rowcount(query)
