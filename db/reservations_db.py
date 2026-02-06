@@ -205,3 +205,10 @@ def delete_cancelled_expired_passes():
                             WHERE end_time < CURRENT_TIMESTAMP)
             """
     return execute_rowcount(query)
+
+def delete_reservations_by_gs_id(gs_id:int):
+    query = """
+            DELETE FROM reservations
+            WHERE gs_id = ?
+             """
+    return execute_rowcount(query,(gs_id,))
