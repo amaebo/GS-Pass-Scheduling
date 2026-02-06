@@ -48,7 +48,7 @@ def delete_gs(gs_id: int, force: bool = False):
     
     if not force:
         if gs_db.gs_has_active_reservations(gs_id):
-            raise HTTPException(status_code=500, detail="Please cancel reservations associated with groundstations first.")
+            raise HTTPException(status_code=409, detail="Please cancel reservations associated with groundstations first.")
     
     
     try:
@@ -57,6 +57,6 @@ def delete_gs(gs_id: int, force: bool = False):
         deleted = gs_db.delete_gs_by_id(gs_id) # deletions should cascade to passes database/cache
         if not deleted:
             raise HTTPException(status_code=404, detail="Ground station not found.")
-        return {"msg": "Ground station deleted. Corresponding reservations deleted", "gs_id": gs_id}
+        return {"msg": "Ground station deleted. All corresponding reservations deleted", "gs_id": gs_id}
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Failed to delete ground station.")
