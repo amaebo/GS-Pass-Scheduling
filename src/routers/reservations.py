@@ -168,3 +168,21 @@ def view_mission_reservations(mission_id: int, include_cancelled: bool = False):
     return {
         "reservations": reservation_list
     }
+
+#Cancel reservation
+@router.post("/reservations/{r_id}/cancel")
+def cancel_reservation(r_id: int):
+    #get reservation
+    reservation = r_db.get_reservation_with_details_by_r_id(r_id)
+
+    if reservation is None:
+        raise HTTPException(status_code=404, detail= "Reservation (r_id) could not be found.")
+    
+    try:
+        r_db.cancel_reservation_by_r_id(r_id)
+    except sqlite3.Error:
+        raise HTTPException(status_code= 500, detail= "Unable to cancel reservation")
+    
+    return{
+        "msg" : "Reservation has been cancelled"
+    }
