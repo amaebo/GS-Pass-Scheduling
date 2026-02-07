@@ -44,7 +44,7 @@ def test_create_reservation_no_mission_no_commands(client):
     response = client.post("/reservations", json={"pass_id": pass_id})
     assert response.status_code == 200
 
-    data = response.json()["Reservation"]
+    data = response.json()["reservation"]
     assert data["mission_id"] is None
     assert data["commands"] == []
 
@@ -59,7 +59,7 @@ def test_create_reservation_no_mission_with_commands(client):
     )
     assert response.status_code == 200
 
-    data = response.json()["Reservation"]
+    data = response.json()["reservation"]
     assert data["mission_id"] is None
     assert "PING" in data["commands"]
 
@@ -84,7 +84,7 @@ def test_create_reservation_with_mission_connected(client):
         json={"pass_id": pass_id, "mission_id": 1},
     )
     assert response.status_code == 200
-    assert response.json()["Reservation"]["mission_id"] == 1
+    assert response.json()["reservation"]["mission_id"] == 1
 
 
 def test_create_reservation_command_not_in_catalog(client):
@@ -188,7 +188,7 @@ def test_create_reservation_with_commands_returns_commands(client):
     )
     assert response.status_code == 200
 
-    data = response.json()["Reservation"]
+    data = response.json()["reservation"]
     assert set(data["commands"]) == {"PING", "DOWNLINK"}
 
 
@@ -236,7 +236,7 @@ def test_cancel_then_reserve_same_pass_again(client):
 
     first = client.post("/reservations", json={"pass_id": pass_id})
     assert first.status_code == 200
-    r_id = first.json()["Reservation"]["r_id"]
+    r_id = first.json()["reservation"]["r_id"]
 
     cancel = client.post(f"/reservations/{r_id}/cancel")
     assert cancel.status_code == 200
@@ -256,7 +256,7 @@ def test_pass_removed_and_restored_in_passes_list_on_cancel(client):
 
     reserve = client.post("/reservations", json={"pass_id": pass_id})
     assert reserve.status_code == 200
-    r_id = reserve.json()["Reservation"]["r_id"]
+    r_id = reserve.json()["reservation"]["r_id"]
 
     during = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
     assert during.status_code == 200
@@ -278,14 +278,14 @@ def test_multiple_cancelled_reservations_allowed_one_active(client):
 
     first = client.post("/reservations", json={"pass_id": pass_id})
     assert first.status_code == 200
-    r_id_1 = first.json()["Reservation"]["r_id"]
+    r_id_1 = first.json()["reservation"]["r_id"]
 
     cancel_1 = client.post(f"/reservations/{r_id_1}/cancel")
     assert cancel_1.status_code == 200
 
     second = client.post("/reservations", json={"pass_id": pass_id})
     assert second.status_code == 200
-    r_id_2 = second.json()["Reservation"]["r_id"]
+    r_id_2 = second.json()["reservation"]["r_id"]
     assert r_id_2 != r_id_1
 
     cancel_2 = client.post(f"/reservations/{r_id_2}/cancel")
@@ -293,7 +293,7 @@ def test_multiple_cancelled_reservations_allowed_one_active(client):
 
     third = client.post("/reservations", json={"pass_id": pass_id})
     assert third.status_code == 200
-    r_id_3 = third.json()["Reservation"]["r_id"]
+    r_id_3 = third.json()["reservation"]["r_id"]
     assert r_id_3 not in {r_id_1, r_id_2}
 
     # A second active reservation should be blocked.

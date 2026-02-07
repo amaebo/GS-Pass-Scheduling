@@ -13,7 +13,7 @@ router = APIRouter()
 def list_gs():
     try:
         rows = gs_db.get_all_gs()
-        return {"ground stations": [dict(row) for row in rows]}
+        return {"ground_stations": [dict(row) for row in rows]}
     except sqlite3.Error:
         raise HTTPException(
             status_code=500,
@@ -35,7 +35,7 @@ def register_gs(gs: GroundStation):
         gs_db.insert_gs_manual(gs.gs_code, lon, lat, alt, status)
         return {
             "msg": "Ground station registered",
-            "Ground Station": {"gs_code": gs.gs_code, "lon": lon, "lat": lat, "alt": alt, "status": gs.status},
+            "ground_station": {"gs_code": gs.gs_code, "lon": lon, "lat": lat, "alt": alt, "status": gs.status},
         }
     except sqlite3.IntegrityError:
         raise HTTPException(
@@ -78,7 +78,7 @@ def update_gs(gs_id:int,gs_updates: GSUpdate):
         raise HTTPException(status_code=500, detail="Unable to update ground station.")
     payload = {
         "msg": "Ground stations updated",
-        "ground station": dict(gs_db.get_gs_by_id(gs_id))
+        "ground_station": dict(gs_db.get_gs_by_id(gs_id))
     }
     if deactivating:
         payload["reservations_cancelled"] = cancelled

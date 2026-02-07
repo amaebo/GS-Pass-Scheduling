@@ -87,7 +87,7 @@ def create_reservation(reservation:ReservationCreate):
     
     return{
         "msg": "Pass has been reserved.",
-        "Reservation": {"r_id": r_id,
+        "reservation": {"r_id": r_id,
                        "mission_id": mission_id,
                        "pass_id": pass_id,
                        "gs_id": reservation_info["gs_id"],

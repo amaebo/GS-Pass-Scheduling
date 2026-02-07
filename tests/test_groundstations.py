@@ -49,7 +49,7 @@ def test_deactivate_groundstation_cancels_and_deletes(client):
     response = client.patch("/groundstations/1/", json={"status": "INACTIVE"})
     assert response.status_code == 200
     payload = response.json()
-    assert payload["ground station"]["status"] == "INACTIVE"
+    assert payload["ground_station"]["status"] == "INACTIVE"
     assert payload["reservations_cancelled"] >= 1
     assert payload["passes_deleted"] >= 1
 

@@ -71,7 +71,7 @@ def delete_mission(mission_id: int):
         mission = miss_db.get_mission_by_id(mission_id)
         if mission:
             miss_db.delete_mission(mission_id)
-            return {"msg": "Mission deleted", "Mission": dict(mission)}
+            return {"msg": "Mission deleted", "mission": dict(mission)}
         raise HTTPException(
             status_code=404,
             detail="Mission (mission_id) not found"
@@ -153,5 +153,5 @@ def remove_sat_from_mission(mission_id: int, norad_id: int):
 
     return {
         "msg": f"Satellite ({norad_id}) was removed from mission ({mission_id}).",
-        "Mission satellites": [dict(row) for row in miss_db.get_all_sats_in_mission(mission_id)],
+        "mission_satellites": [dict(row) for row in miss_db.get_all_sats_in_mission(mission_id)],
     }

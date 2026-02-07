@@ -34,7 +34,7 @@ def _create_groundstation_no_status(client) -> int:
 
     listing = client.get("/groundstations")
     assert listing.status_code == 200
-    rows = listing.json()["ground stations"]
+    rows = listing.json()["ground_stations"]
     match = next((gs for gs in rows if gs["gs_code"] == gs_code), None)
     assert match is not None
     return match["gs_id"]
@@ -59,7 +59,7 @@ def _create_groundstation_invalid_status(client) -> int | None:
 
     listing = client.get("/groundstations")
     assert listing.status_code == 200
-    rows = listing.json()["ground stations"]
+    rows = listing.json()["ground_stations"]
     match = next((gs for gs in rows if gs["gs_code"] == gs_code), None)
     assert match is None
     return None
@@ -80,7 +80,7 @@ def _create_groundstation_active_status(client) -> int:
 
     listing = client.get("/groundstations")
     assert listing.status_code == 200
-    rows = listing.json()["ground stations"]
+    rows = listing.json()["ground_stations"]
     match = next((gs for gs in rows if gs["gs_code"] == gs_code), None)
     assert match is not None
     return match["gs_id"]
@@ -146,7 +146,7 @@ def test_create_groundstation_defaults_active_status(client):
     gs_id = _create_groundstation_no_status(client)
     listing = client.get("/groundstations")
     assert listing.status_code == 200
-    rows = listing.json()["ground stations"]
+    rows = listing.json()["ground_stations"]
     match = next((gs for gs in rows if gs["gs_id"] == gs_id), None)
     assert match is not None
     assert match["status"] == "ACTIVE"
@@ -156,7 +156,7 @@ def test_create_groundstation_with_active_status(client):
     gs_id = _create_groundstation_active_status(client)
     listing = client.get("/groundstations")
     assert listing.status_code == 200
-    rows = listing.json()["ground stations"]
+    rows = listing.json()["ground_stations"]
     match = next((gs for gs in rows if gs["gs_id"] == gs_id), None)
     assert match is not None
     assert match["status"] == "ACTIVE"
@@ -184,7 +184,7 @@ def test_delete_groundstation_blocked_by_active_reservation(client):
 
         reserve = client.post("/reservations", json={"pass_id": pass_id})
         assert reserve.status_code == 200
-        r_id = reserve.json()["Reservation"]["r_id"]
+        r_id = reserve.json()["reservation"]["r_id"]
 
         response = client.delete(f"/groundstations/{gs_id}")
         assert response.status_code == 409
@@ -203,7 +203,7 @@ def test_delete_groundstation_no_reservations(client):
 
     listing = client.get("/groundstations")
     assert listing.status_code == 200
-    rows = listing.json()["ground stations"]
+    rows = listing.json()["ground_stations"]
     assert all(gs["gs_id"] != gs_id for gs in rows)
 
 
@@ -222,7 +222,7 @@ def test_delete_groundstation_cancelled_reservation_allows_delete(client):
 
     reserve = client.post("/reservations", json={"pass_id": pass_id})
     assert reserve.status_code == 200
-    r_id = reserve.json()["Reservation"]["r_id"]
+    r_id = reserve.json()["reservation"]["r_id"]
 
     cancel = client.post(f"/reservations/{r_id}/cancel")
     assert cancel.status_code == 200
@@ -233,7 +233,7 @@ def test_delete_groundstation_cancelled_reservation_allows_delete(client):
 
     listing = client.get("/groundstations")
     assert listing.status_code == 200
-    rows = listing.json()["ground stations"]
+    rows = listing.json()["ground_stations"]
     assert all(gs["gs_id"] != gs_id for gs in rows)
 
 
@@ -260,7 +260,7 @@ def test_delete_groundstation_force_with_active_reservation(client):
 
     listing = client.get("/groundstations")
     assert listing.status_code == 200
-    rows = listing.json()["ground stations"]
+    rows = listing.json()["ground_stations"]
     assert all(gs["gs_id"] != gs_id for gs in rows)
 
 
@@ -271,7 +271,7 @@ def test_update_groundstation_allows_code_and_status_only(client):
         json={"gs_code": f"UPDATED_{gs_id}", "status": "INACTIVE"},
     )
     assert response.status_code == 200
-    updated = response.json()["ground station"]
+    updated = response.json()["ground_station"]
     assert updated["gs_code"] == f"UPDATED_{gs_id}"
     assert updated["status"] == "INACTIVE"
 
@@ -283,7 +283,7 @@ def test_update_groundstation_status_normalized(client):
         json={"status": "inactive"},
     )
     assert response.status_code == 200
-    updated = response.json()["ground station"]
+    updated = response.json()["ground_station"]
     assert updated["status"] == "INACTIVE"
 
 def test_update_groundstation_inactive_cancels_reservations_and_deletes_passes(client):
@@ -310,7 +310,7 @@ def test_update_groundstation_inactive_cancels_reservations_and_deletes_passes(c
 
     reserve = client.post("/reservations", json={"pass_id": reserved_pass_id})
     assert reserve.status_code == 200
-    r_id = reserve.json()["Reservation"]["r_id"]
+    r_id = reserve.json()["reservation"]["r_id"]
 
     response = client.patch(
         f"/groundstations/{gs_id}/",
