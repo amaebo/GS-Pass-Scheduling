@@ -105,6 +105,7 @@ def delete_gs(gs_id: int, response: Response, force: bool = False):
         return {
             "msg": "Ground station deleted. All corresponding reservations deleted",
             "gs_id": gs_id,
+            "deleted_reservations": reservations_deleted,
             "deleted_reservations_count": reservations_deleted,
         }
     except sqlite3.Error:
