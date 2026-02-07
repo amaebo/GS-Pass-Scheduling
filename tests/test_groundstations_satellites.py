@@ -90,6 +90,28 @@ def _delete_groundstation_force(client, gs_id: int):
     client.delete(f"/groundstations/{gs_id}", params={"force": True})
 
 
+def _create_satellite(client) -> int:
+    ms = int(time.time() * 1000)
+    norad_id = 70000 + (ms % 20000)
+    payload = {"norad_id": norad_id, "s_name": f"TEST SAT {ms}"}
+    response = client.post("/satellites/register", json=payload)
+    assert response.status_code == 201
+    return norad_id
+
+
+def _get_satellite_s_id(norad_id: int) -> int:
+    conn = db_init.db_connect()
+    try:
+        row = conn.execute(
+            "SELECT s_id FROM satellites WHERE norad_id = ?",
+            (norad_id,),
+        ).fetchone()
+        assert row is not None
+        return row["s_id"]
+    finally:
+        conn.close()
+
+
 def test_list_satellites_seeded(client):
     response = client.get("/satellites")
     assert response.status_code == 200
@@ -176,6 +198,8 @@ def test_delete_groundstation_no_reservations(client):
     gs_id = _create_groundstation(client)
     response = client.delete(f"/groundstations/{gs_id}")
     assert response.status_code == 200
+    assert "Warning" in response.headers
+    assert response.json()["deleted_reservations"] == 0
 
     listing = client.get("/groundstations")
     assert listing.status_code == 200
@@ -205,6 +229,7 @@ def test_delete_groundstation_cancelled_reservation_allows_delete(client):
 
     response = client.delete(f"/groundstations/{gs_id}")
     assert response.status_code == 200
+    assert "Warning" in response.headers
 
     listing = client.get("/groundstations")
     assert listing.status_code == 200
@@ -230,8 +255,145 @@ def test_delete_groundstation_force_with_active_reservation(client):
 
     response = client.delete(f"/groundstations/{gs_id}", params={"force": True})
     assert response.status_code == 200
+    assert "Warning" in response.headers
+    assert response.json()["deleted_reservations"] == 1
 
     listing = client.get("/groundstations")
     assert listing.status_code == 200
     rows = listing.json()["ground stations"]
     assert all(gs["gs_id"] != gs_id for gs in rows)
+
+
+def test_update_groundstation_allows_code_and_status_only(client):
+    gs_id = _create_groundstation(client)
+    response = client.patch(
+        f"/groundstations/{gs_id}/",
+        json={"gs_code": f"UPDATED_{gs_id}", "status": "INACTIVE"},
+    )
+    assert response.status_code == 200
+    updated = response.json()["ground station"]
+    assert updated["gs_code"] == f"UPDATED_{gs_id}"
+    assert updated["status"] == "INACTIVE"
+
+
+def test_update_groundstation_status_normalized(client):
+    gs_id = _create_groundstation(client)
+    response = client.patch(
+        f"/groundstations/{gs_id}/",
+        json={"status": "inactive"},
+    )
+    assert response.status_code == 200
+    updated = response.json()["ground station"]
+    assert updated["status"] == "INACTIVE"
+
+
+def test_update_groundstation_rejects_location_changes(client):
+    gs_id = _create_groundstation(client)
+    response = client.patch(f"/groundstations/{gs_id}/", json={"lat": 40.0})
+    assert response.status_code == 422
+
+
+def test_update_groundstation_rejects_empty_payload(client):
+    gs_id = _create_groundstation(client)
+    response = client.patch(f"/groundstations/{gs_id}/", json={})
+    assert response.status_code == 400
+
+
+def test_update_groundstation_not_found(client):
+    response = client.patch("/groundstations/999999/", json={"gs_code": "NOT_FOUND"})
+    assert response.status_code == 404
+
+
+def test_update_satellite_allows_name_only(client):
+    norad_id = _create_satellite(client)
+    response = client.patch(f"/satellites/{norad_id}/", json={"s_name": "NEW SAT NAME"})
+    assert response.status_code == 200
+    sat = response.json()["satellite"]
+    assert sat["norad_id"] == norad_id
+    assert sat["s_name"] == "NEW SAT NAME"
+
+
+def test_update_satellite_rejects_non_name_fields(client):
+    norad_id = _create_satellite(client)
+    response = client.patch(f"/satellites/{norad_id}/", json={"tle_line1": "X"})
+    assert response.status_code == 422
+
+
+def test_update_satellite_rejects_empty_payload(client):
+    norad_id = _create_satellite(client)
+    response = client.patch(f"/satellites/{norad_id}/", json={})
+    assert response.status_code == 400
+
+
+def test_update_satellite_not_found(client):
+    response = client.patch("/satellites/999999/", json={"s_name": "MISSING"})
+    assert response.status_code == 404
+
+
+def test_delete_satellite_returns_warning_header(client):
+    norad_id = _create_satellite(client)
+    response = client.delete(f"/satellites/{norad_id}")
+    assert response.status_code == 200
+    assert "Warning" in response.headers
+
+
+def test_delete_satellite_blocked_by_active_reservation(client):
+    norad_id = _create_satellite(client)
+    s_id = _get_satellite_s_id(norad_id)
+    gs_id = _create_groundstation(client)
+
+    now = datetime.now(timezone.utc)
+    pass_id = p_db.insert_n2yo_pass_return_id(
+        s_id=s_id,
+        gs_id=gs_id,
+        max_elevation=45.0,
+        duration=600,
+        start_time=_utc_ts(now + timedelta(hours=1)),
+        end_time=_utc_ts(now + timedelta(hours=2)),
+    )
+    assert pass_id is not None
+
+    reserve = client.post("/reservations", json={"pass_id": pass_id})
+    assert reserve.status_code == 200
+
+    response = client.delete(f"/satellites/{norad_id}")
+    assert response.status_code == 409
+
+    _delete_groundstation_force(client, gs_id)
+
+
+def test_delete_satellite_force_with_active_reservation(client):
+    norad_id = _create_satellite(client)
+    s_id = _get_satellite_s_id(norad_id)
+    gs_id = _create_groundstation(client)
+
+    now = datetime.now(timezone.utc)
+    pass_id = p_db.insert_n2yo_pass_return_id(
+        s_id=s_id,
+        gs_id=gs_id,
+        max_elevation=45.0,
+        duration=600,
+        start_time=_utc_ts(now + timedelta(hours=1)),
+        end_time=_utc_ts(now + timedelta(hours=2)),
+    )
+    assert pass_id is not None
+
+    reserve = client.post("/reservations", json={"pass_id": pass_id})
+    assert reserve.status_code == 200
+
+    response = client.delete(f"/satellites/{norad_id}", params={"force": True})
+    assert response.status_code == 200
+    assert "Warning" in response.headers
+    assert response.json()["deleted_reservations"] == 1
+
+    _delete_groundstation_force(client, gs_id)
+
+
+def test_delete_groundstation_not_found(client):
+    response = client.delete("/groundstations/999999")
+    assert response.status_code == 404
+
+
+def test_delete_satellite_not_found(client):
+    response = client.delete("/satellites/999999")
+    assert response.status_code == 404
