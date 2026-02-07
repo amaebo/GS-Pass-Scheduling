@@ -57,8 +57,6 @@ VALUES (
 -- Satellites
 -- Notes:
 -- - TLE lines are sample-format, not guaranteed current/valid.
--- - mode: SAFE | NOMINAL | PAYLOAD
--- - health_status: OK | DEGRADED | UNKNOWN
 -- =========================================================
 INSERT INTO satellites (
         s_id,
@@ -66,10 +64,6 @@ INSERT INTO satellites (
         norad_id,
         tle_line1,
         tle_line2,
-        tle_updated_at,
-        mode,
-        health_status,
-        last_contact_time,
         date_added
     )
 VALUES (
@@ -78,10 +72,6 @@ VALUES (
         25544,
         '1 25544U 98067A   26029.50000000  .00010000  00000-0  18000-3 0  9991',
         '2 25544  51.6400 120.0000 0005000  20.0000  40.0000 15.50000000    10',
-        '2026-01-29 18:00:00',
-        'NOMINAL',
-        'OK',
-        '2026-01-29 18:10:00',
         '2026-01-10 12:10:00'
     ),
     (
@@ -90,10 +80,6 @@ VALUES (
         27424,
         '1 27424U 02022A   26029.40000000  .00002000  00000-0  12000-3 0  9996',
         '2 27424  98.2000  40.0000 0001000  10.0000  80.0000 14.57000000    20',
-        '2026-01-29 18:05:00',
-        'PAYLOAD',
-        'OK',
-        '2026-01-28 22:30:00',
         '2026-01-10 12:15:00'
     ),
     (
@@ -102,10 +88,6 @@ VALUES (
         25338,
         '1 25338U 98030A   26029.30000000  .00001000  00000-0  90000-4 0  9992',
         '2 25338  98.7000 200.0000 0010000  90.0000 270.0000 14.26000000    30',
-        '2026-01-29 18:08:00',
-        'SAFE',
-        'DEGRADED',
-        '2026-01-25 05:00:00',
         '2026-01-10 12:20:00'
     );
 -- =========================================================
@@ -135,12 +117,12 @@ VALUES (
     );
 -- =========================================================
 -- Mission ↔ Satellite links
--- role examples: PRIMARY | SECONDARY | PAYLOAD
+-- role examples: PRIMARY | BACKUP | PAYLOAD | UNASSIGNED
 -- =========================================================
 INSERT INTO mission_satellites (mission_id, s_id, role, date_added)
 VALUES (1, 1, 'PRIMARY', '2026-01-11 09:30:00'),
     (2, 2, 'PAYLOAD', '2026-01-11 09:35:00'),
-    (2, 3, 'SECONDARY', '2026-01-11 09:36:00');
+    (2, 3, 'BACKUP', '2026-01-11 09:36:00');
 -- =========================================================
 -- Command catalog
 -- =========================================================
@@ -159,7 +141,7 @@ VALUES ('PING', 'Basic connectivity check'),
 -- Predicted passes (cached)
 -- source: 'n2yo' | 'skyfield'
 -- CHECK(end_time > start_time) enforced
--- UNIQUE(s_id, gs_id, start_time, source) enforced
+-- UNIQUE(gs_id, s_id, start_time, end_time) enforced
 -- =========================================================
 INSERT INTO predicted_passes (
         pass_id,
@@ -292,7 +274,6 @@ VALUES -- Active reservation for ISS pass 1, tied to mission 1
     );
 -- =========================================================
 -- Commands scheduled within a reservation
--- status: PLANNED | QUEUED | SENT | ACKED | FAILED | CANCELLED
 -- =========================================================
 INSERT INTO reservation_commands (
         rc_id,
