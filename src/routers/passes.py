@@ -48,7 +48,7 @@ def view_pass(norad_id: int, gs_id: int):
                 gs_lat=gs["lat"],
                 alt=gs["alt"],
                 min_visibility=30,
-                days=1,
+                days=4,
             )
         except httpx.HTTPStatusError:
             raise HTTPException(status_code=502, detail="N2YO API request failed.")
