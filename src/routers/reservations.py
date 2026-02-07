@@ -5,6 +5,7 @@ from src.schemas import ReservationCreate
 import db.passes_db as p_db
 import db.missions_db as m_db
 import db.satellites_db as sat_db
+import db.gs_db as gs_db
 import db.reservations_db as r_db
 import db.commands_db as c_db
 
@@ -27,6 +28,9 @@ def create_reservation(reservation:ReservationCreate):
     pass_info = p_db.get_pass_from_pass_id(pass_id)
     gs_id = pass_info["gs_id"]
     s_id = pass_info["s_id"]
+    gs = gs_db.get_gs_by_id(gs_id)
+    if gs and gs["status"] != "ACTIVE":
+        raise HTTPException(status_code=409, detail="Ground station is inactive.")
     sat = sat_db.get_satellite_by_id(s_id)
     # if client gives mission, check if mission exists and if satellite is in mission
     if mission_id is not None:
