@@ -1,10 +1,9 @@
 import sqlite3
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 
 import db.satellites_db as sat_db
-import db.reservations_db as r_db
 
-from src.schemas import Satellite
+from src.schemas import Satellite, SatelliteUpdate
 
 
 router = APIRouter()
@@ -35,6 +34,33 @@ def register_satellite(satellite: Satellite):
             status_code=409,
             detail="Satellite already registered (duplicate NORAD ID)."
         )
+
+@router.patch("/satellites/{norad_id}/")
+def update_satellite(norad_id: int, sat_updates: SatelliteUpdate):
+    satellite = sat_db.get_satellite_by_norad_id(norad_id)
+    if satellite is None:
+        raise HTTPException(status_code=404, detail="Satellite not found.")
+
+    updates = {k: v for k, v in sat_updates.model_dump().items() if v is not None}
+    if not updates:
+        raise HTTPException(status_code=400, detail="No updatable fields provided.")
+    if set(updates) - {"s_name"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Only s_name can be updated. Create a new satellite to change other fields."
+        )
+
+    try:
+        sat_db.update_satellite(satellite["s_id"], updates)
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=409, detail="Satellite update already exists.")
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Unable to update satellite.")
+
+    return {
+        "msg": "Satellite updated",
+        "satellite": dict(sat_db.get_satellite_by_id(satellite["s_id"]))
+    }
 
 @router.delete("/satellites/{norad_id}")
 def delete_satellite(norad_id: int, force: bool = False):

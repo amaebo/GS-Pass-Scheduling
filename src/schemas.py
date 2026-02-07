@@ -7,6 +7,9 @@ class Satellite(BaseModel):
     norad_id: int = Field(..., ge=1)  # must be >= 1
     s_name: str = Field(..., min_length=1)
 
+class SatelliteUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    s_name: str | None = Field(None, min_length=1)
 
 class GroundStation(BaseModel):
     gs_code: str = Field(min_length=3, max_length=50, pattern=GS_CODE_REGEX)

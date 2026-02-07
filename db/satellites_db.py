@@ -70,3 +70,21 @@ def delete_satellite_by_s_id(s_id: int):
             DELETE FROM satellites
             WHERE s_id = ? """
     return execute_rowcount(query,(s_id,))
+def update_satellite(s_id: int, updates: dict):
+    if not updates:
+        return 0
+
+    set_clauses = []
+    params = []
+
+    for col, value in updates.items():
+        set_clauses.append(f"{col} = ?")
+        params.append(value)
+
+    params.append(s_id)
+    query = f"""
+            UPDATE satellites
+            SET {", ".join(set_clauses)}
+            WHERE s_id = ?
+        """
+    return execute_rowcount(query, tuple(params))
