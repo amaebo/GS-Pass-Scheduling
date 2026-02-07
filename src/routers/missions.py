@@ -138,19 +138,20 @@ def remove_sat_from_mission(mission_id: int, norad_id: int):
     mission = miss_db.get_mission_by_id(mission_id)
     satellite = sat_db.get_satellite_by_norad_id(norad_id)
 
-    if mission:
-        if satellite:
-            res = miss_db.delete_sat_from_mission(mission_id, satellite["s_id"])
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission not found.")
+    if not satellite:
+        raise HTTPException(status_code=404, detail="Satellite not found")
 
-            if not res:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Statellite ({norad_id}) not part of mission ({mission_id})"
-                )
+    res = miss_db.delete_sat_from_mission(mission_id, satellite["s_id"])
 
-            return {
-                "msg": f"Satellite ({norad_id}) was removed from mission ({mission_id}).",
-                "Mission satellites": [dict(row) for row in miss_db.get_all_sats_in_mission(mission_id)],
-            }
+    if not res:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Statellite ({norad_id}) not part of mission ({mission_id})"
+        )
 
-    raise HTTPException(status_code=404, detail="Mission not found.")
+    return {
+        "msg": f"Satellite ({norad_id}) was removed from mission ({mission_id}).",
+        "Mission satellites": [dict(row) for row in miss_db.get_all_sats_in_mission(mission_id)],
+    }
