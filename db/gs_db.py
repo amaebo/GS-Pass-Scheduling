@@ -1,5 +1,6 @@
 
 import sqlite3
+from db.db_init import db_connect
 from db.db_query import execute_row_id, execute_rowcount, fetch_all, fetch_one
 
 
@@ -55,6 +56,25 @@ def delete_gs_by_id(gs_id: int) -> int:
         return execute_rowcount(query, (gs_id,))
     except sqlite3.Error:
         raise
+
+def delete_gs_and_reservations(gs_id: int) -> tuple[int, int]:
+    conn = db_connect()
+    try:
+        reservations_cur = conn.execute(
+            "DELETE FROM reservations WHERE gs_id = ?",
+            (gs_id,),
+        )
+        gs_cur = conn.execute(
+            "DELETE FROM ground_stations WHERE gs_id = ?",
+            (gs_id,),
+        )
+        conn.commit()
+        return reservations_cur.rowcount, gs_cur.rowcount
+    except sqlite3.Error:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 def update_gs(gs_id: int, updates: dict):
     if not updates:

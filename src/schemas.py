@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 GS_CODE_REGEX = r"^[A-Z][A-Z0-9_]{2,49}$"  # 3–50 chars, all caps, with numbers or underscores allowed.
 
@@ -27,10 +27,8 @@ class MissionUpdate(BaseModel):
     owner: str | None = None
     priority: str | None = None
 class GSUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     gs_code: str | None = Field(None, min_length=3, max_length=50, pattern=GS_CODE_REGEX) 
-    lon: float | None = None
-    lat: float | None = None
-    alt: float | None = None
     status: str | None = None
 class ReservationCreate(BaseModel):
     pass_id: int = Field(..., gt=0)

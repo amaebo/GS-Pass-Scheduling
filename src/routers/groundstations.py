@@ -1,9 +1,8 @@
 import sqlite3
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from src.schemas import GSUpdate
 
 import db.gs_db as gs_db
-import db.reservations_db as r_db
 from src.schemas import GroundStation
 
 
@@ -50,11 +49,20 @@ def update_gs(gs_id:int,gs_updates: GSUpdate):
     if not gs_db.gs_exists_by_gs_id(gs_id):
         raise HTTPException(status_code= 404, detail="Ground station not found")
     
-    all_updates = gs_updates.model_dump()
-    # Filter update items with actual values
-    filtered_updates = {key: value for key, value in all_updates.items() if value is not None}
+    updates = {key: value for key, value in gs_updates.model_dump().items() if value is not None}
+    if not updates:
+        raise HTTPException(status_code=400, detail="No updatable fields provided.")
+
+    if set(updates) - {"gs_code", "status"}:
+        raise HTTPException(status_code=400, detail="Only gs_code and status can be updated.")
+
+    if "status" in updates:
+        status = updates["status"].upper()
+        if status not in ("ACTIVE", "INACTIVE"):
+            raise HTTPException(status_code=400, detail="Status must be 'ACTIVE' or 'INACTIVE'.")
+        updates["status"] = status
     try:
-        gs_db.update_gs(gs_id,filtered_updates)
+        gs_db.update_gs(gs_id, updates)
     except sqlite3.IntegrityError:
         raise HTTPException(status_code=409, detail="gs_code or (lat,lon) coordinates already exist.")
     except sqlite3.Error:
@@ -65,7 +73,7 @@ def update_gs(gs_id:int,gs_updates: GSUpdate):
     }
 #delete groundstation along with history of all gs reservations 
 @router.delete("/groundstations/{gs_id}")
-def delete_gs(gs_id: int, force: bool = False):
+def delete_gs(gs_id: int, response: Response, force: bool = False):
     gs = gs_db.get_gs_by_id(gs_id)
     if not gs:
         raise HTTPException(status_code=404, detail="Ground station not found.")
@@ -74,13 +82,17 @@ def delete_gs(gs_id: int, force: bool = False):
         if gs_db.gs_has_active_reservations(gs_id):
             raise HTTPException(status_code=409, detail="Please cancel reservations associated with groundstations first.")
     
-    
     try:
-        #delete all reservations, cancelled or otherwise
-        r_db.delete_reservations_by_gs_id(gs_id) #reservations must be deleted for associated passes to be deleted
-        deleted = gs_db.delete_gs_by_id(gs_id) # deletions should cascade to passes database/cache
+        reservations_deleted, deleted = gs_db.delete_gs_and_reservations(gs_id)
         if not deleted:
             raise HTTPException(status_code=404, detail="Ground station not found.")
-        return {"msg": "Ground station deleted. All corresponding reservations deleted", "gs_id": gs_id}
+        response.headers["Warning"] = (
+            "Deletion removes predicted passes and reservations."
+        )
+        return {
+            "msg": "Ground station deleted. All corresponding reservations deleted",
+            "gs_id": gs_id,
+            "deleted_reservations_count": reservations_deleted,
+        }
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Failed to delete ground station.")
