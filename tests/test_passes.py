@@ -158,3 +158,31 @@ def test_passes_n2yo_failure(client, monkeypatch):
 
     response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
     assert response.status_code == 502
+
+
+def test_delete_unreserved_expired_passes_keeps_active():
+    _clear_predicted_passes()
+    now = datetime.now(timezone.utc)
+    active_id = p_db.insert_n2yo_pass_return_id(
+        s_id=1,
+        gs_id=1,
+        max_elevation=20.0,
+        duration=600,
+        start_time=_utc_ts(now - timedelta(minutes=20)),
+        end_time=_utc_ts(now + timedelta(minutes=20)),
+    )
+    expired_id = p_db.insert_n2yo_pass_return_id(
+        s_id=1,
+        gs_id=1,
+        max_elevation=10.0,
+        duration=300,
+        start_time=_utc_ts(now - timedelta(hours=2)),
+        end_time=_utc_ts(now - timedelta(hours=1)),
+    )
+    assert active_id is not None
+    assert expired_id is not None
+
+    p_db.delete_unreserved_expired_passes()
+
+    assert p_db.get_pass_from_pass_id(active_id) is not None
+    assert p_db.get_pass_from_pass_id(expired_id) is None

@@ -71,7 +71,7 @@ def delete_pass_by_pass_id(pass_id: int):
 def delete_unreserved_expired_passes():
     query = """
             DELETE FROM predicted_passes
-            WHERE start_time < CURRENT_TIMESTAMP
+            WHERE end_time < CURRENT_TIMESTAMP
             AND NOT EXISTS (
                 SELECT 1
                 FROM reservations r
@@ -132,4 +132,3 @@ def pass_has_active_reservation(pass_id: int) -> bool:
               AND r.cancelled_at IS NULL
         """
     return True if fetch_one(query, (pass_id,)) else False
-
