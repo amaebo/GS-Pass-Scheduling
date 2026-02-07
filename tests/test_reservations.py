@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
+import sqlite3
 
 import db.passes_db as p_db
+import db.reservations_db as r_db
 from db import db_init
 
 
@@ -116,6 +118,19 @@ def test_create_reservation_already_reserved(client):
 
     second = client.post("/reservations", json={"pass_id": pass_id})
     assert second.status_code == 409
+
+
+def test_create_reservation_handles_integrity_error(client, monkeypatch):
+    _clear_reservation_data()
+    pass_id = _create_future_pass()
+
+    def raise_integrity(*args, **kwargs):
+        raise sqlite3.IntegrityError("duplicate")
+
+    monkeypatch.setattr(r_db, "create_reservation_with_commands", raise_integrity)
+
+    response = client.post("/reservations", json={"pass_id": pass_id})
+    assert response.status_code == 409
 
 
 def test_create_reservation_pass_expired(client):

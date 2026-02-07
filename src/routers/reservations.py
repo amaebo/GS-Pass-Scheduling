@@ -73,6 +73,8 @@ def create_reservation(reservation:ReservationCreate):
             mission_id=mission_id,
             commands=commands,
         )
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=409, detail="Pass is already reserved")
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Reservation could not be made.")
 
