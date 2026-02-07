@@ -52,6 +52,8 @@ def view_pass(norad_id: int, gs_id: int):
             )
         except httpx.HTTPStatusError:
             raise HTTPException(status_code=502, detail="N2YO API request failed.")
+        except httpx.RequestError:
+            raise HTTPException(status_code=502, detail="N2YO API request failed.")
 
         total_passes = len(n2yo_passes)
         passes_cached_count = 0

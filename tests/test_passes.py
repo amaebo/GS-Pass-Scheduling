@@ -160,6 +160,19 @@ def test_passes_n2yo_failure(client, monkeypatch):
     assert response.status_code == 502
 
 
+def test_passes_n2yo_request_error(client, monkeypatch):
+    _clear_predicted_passes()
+
+    def raise_request_error(*args, **kwargs):
+        request = httpx.Request("GET", "https://example.com")
+        raise httpx.RequestError("boom", request=request)
+
+    monkeypatch.setattr(passes_module, "get_passes_from_n2yo", raise_request_error)
+
+    response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
+    assert response.status_code == 502
+
+
 def test_delete_unreserved_expired_passes_keeps_active():
     _clear_predicted_passes()
     now = datetime.now(timezone.utc)

@@ -23,10 +23,15 @@ def get_passes_from_n2yo(
     if not N2YO_BASE_URL:
         raise HTTPException(status_code=500, detail="N2YO API base url is not configured.")
     
-    res = httpx.get(
-        f"{N2YO_BASE_URL}visualpasses/{norad_id}/{gs_lat}/{gs_lon}/{alt}/{days}/{min_visibility}",
-        params={"apiKey": N2YO_API_KEY}
-    )
+    try:
+        res = httpx.get(
+            f"{N2YO_BASE_URL}visualpasses/{norad_id}/{gs_lat}/{gs_lon}/{alt}/{days}/{min_visibility}",
+            params={"apiKey": N2YO_API_KEY},
+            timeout=10.0,
+        )
+    except httpx.RequestError as exc:
+        logger.error(f"N2YO API request failed: {exc}")
+        raise HTTPException(status_code=502, detail="N2YO API request failed.")
     # raise HTTPStatusError if response is not 2xx status
     res.raise_for_status()
     
