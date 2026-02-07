@@ -106,7 +106,6 @@ def delete_gs(gs_id: int, response: Response, force: bool = False):
             "msg": "Ground station deleted. All corresponding reservations deleted",
             "gs_id": gs_id,
             "deleted_reservations": reservations_deleted,
-            "deleted_reservations_count": reservations_deleted,
         }
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Failed to delete ground station.")
