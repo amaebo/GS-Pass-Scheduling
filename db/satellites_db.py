@@ -16,7 +16,7 @@ def insert_new_satellite(norad_id: int, s_name: str) -> int:
 def get_all_satellites(include_s_id: bool = False):
     if include_s_id:
         query = """
-                SELECT s_id, s_name, norad_id, mode, health_status, date_added
+                SELECT s_id, s_name, norad_id, date_added
                 FROM satellites
             """
         
