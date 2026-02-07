@@ -55,3 +55,32 @@ def delete_gs_by_id(gs_id: int) -> int:
         return execute_rowcount(query, (gs_id,))
     except sqlite3.Error:
         raise
+
+def update_gs(gs_id: int, updates: dict):
+    if not updates:
+        return 0 
+
+    set_clause =[]
+    params = []
+
+    for col, value in updates.items():
+        clause = f"{col} = ?"
+        set_clause.append(clause)
+        params.append(value)
+
+    params.append(gs_id)
+    query = f"""
+                UPDATE ground_stations
+                SET {','.join(set_clause)}
+                WHERE gs_id = ?
+                """
+    return execute_rowcount(query, tuple(params))
+
+def gs_exists_by_gs_id(gs_id: int):
+    query = """
+            SELECT 1
+            FROM ground_stations
+            WHERE gs_id = ?
+        """
+    return True if fetch_one(query, (gs_id,)) else False
+    
