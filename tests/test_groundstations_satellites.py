@@ -19,7 +19,7 @@ def _clear_passes_and_reservations_for_gs(gs_id: int):
         conn.close()
 
 
-def _create_groundstation(client) -> int:
+def _create_groundstation_no_status(client) -> int:
     ms = int(time.time() * 1000)
     gs_code = f"TEST_GS_{ms}"
     lat = 39.0 + (ms % 1000) / 10000
@@ -29,6 +29,52 @@ def _create_groundstation(client) -> int:
     response = client.post(
         "/groundstations",
         json={"gs_code": gs_code, "lat": lat, "lon": lon, "alt": alt},
+    )
+    assert response.status_code == 201
+
+    listing = client.get("/groundstations")
+    assert listing.status_code == 200
+    rows = listing.json()["ground stations"]
+    match = next((gs for gs in rows if gs["gs_code"] == gs_code), None)
+    assert match is not None
+    return match["gs_id"]
+
+
+def _create_groundstation(client) -> int:
+    return _create_groundstation_no_status(client)
+
+
+def _create_groundstation_invalid_status(client) -> int | None:
+    ms = int(time.time() * 1000)
+    gs_code = f"TEST_GS_{ms}"
+    lat = 39.0 + (ms % 1000) / 10000
+    lon = -105.0 - (ms % 1000) / 10000
+    alt = 1600.0 + (ms % 100) / 10
+    status = "INVALID_STATUS"
+    response = client.post(
+        "/groundstations",
+        json={"gs_code": gs_code, "lat": lat, "lon": lon, "alt": alt, "status": status},
+    )
+    assert response.status_code == 409
+
+    listing = client.get("/groundstations")
+    assert listing.status_code == 200
+    rows = listing.json()["ground stations"]
+    match = next((gs for gs in rows if gs["gs_code"] == gs_code), None)
+    assert match is None
+    return None
+
+
+def _create_groundstation_active_status(client) -> int:
+    ms = int(time.time() * 1000)
+    gs_code = f"TEST_GS_{ms}"
+    lat = 39.0 + (ms % 1000) / 10000
+    lon = -105.0 - (ms % 1000) / 10000
+    alt = 1600.0 + (ms % 100) / 10
+    status = "ACTIVE"
+    response = client.post(
+        "/groundstations",
+        json={"gs_code": gs_code, "lat": lat, "lon": lon, "alt": alt, "status": status},
     )
     assert response.status_code == 201
 
@@ -72,6 +118,31 @@ def test_register_satellite_duplicate_norad_id(client):
 
     second = client.post("/satellites/register", json=payload)
     assert second.status_code == 409
+
+
+def test_create_groundstation_defaults_active_status(client):
+    gs_id = _create_groundstation_no_status(client)
+    listing = client.get("/groundstations")
+    assert listing.status_code == 200
+    rows = listing.json()["ground stations"]
+    match = next((gs for gs in rows if gs["gs_id"] == gs_id), None)
+    assert match is not None
+    assert match["status"] == "ACTIVE"
+
+
+def test_create_groundstation_with_active_status(client):
+    gs_id = _create_groundstation_active_status(client)
+    listing = client.get("/groundstations")
+    assert listing.status_code == 200
+    rows = listing.json()["ground stations"]
+    match = next((gs for gs in rows if gs["gs_id"] == gs_id), None)
+    assert match is not None
+    assert match["status"] == "ACTIVE"
+
+
+def test_create_groundstation_invalid_status_rejected(client):
+    gs_id = _create_groundstation_invalid_status(client)
+    assert gs_id is None
 
 
 def test_delete_groundstation_blocked_by_active_reservation(client):
