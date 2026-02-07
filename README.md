@@ -20,15 +20,27 @@ FastAPI service for managing ground stations, satellites, missions, predicted pa
 
 ## Quick start
 1. Create a virtual environment and install dependencies.
-   - Required packages include: `fastapi`, `uvicorn`, `httpx`, `python-dotenv`, `pydantic`.
-   - For tests: `pytest` (and `fastapi[all]` or `httpx` if not already installed).
+   - Recommended: `pip install "fastapi[standard]"`
+     - Includes Uvicorn for running the API.
+   - Additional requirements used by this project: `httpx`, `python-dotenv` (for `.env`), `pytest` (tests).
 
 2. Configure environment variables in `.env` (see the next section).
 
-3. Initialize and seed the SQLite database:
+3. Initialize the SQLite database (required), and optionally seed it (recommended for local dev):
 
 ```bash
 python -c "from db.db_init import init_db; init_db()"
+```
+
+Optional seed:
+
+```bash
+python -c "from db.db_init import init_db, seed_db; init_db(); seed_db()"
+```
+
+Seed only (assumes schema already initialized):
+
+```bash
 python - <<'PY'
 from pathlib import Path
 from db import db_init
@@ -46,7 +58,7 @@ PY
 4. Run the API:
 
 ```bash
-uvicorn src.main:app --reload
+fastapi fastapi dev src/main.py
 ```
 
 The server will be available at `http://localhost:8000`.
@@ -63,7 +75,7 @@ Optional:
 
 ## API overview
 
-Base URL: `http://localhost:8000`
+Base URL depends on where the FastAPI server is running. In local dev, it usually runs at `http://localhost:8000`.
 
 ### Ground stations
 - `GET /groundstations` List all ground stations.
@@ -80,13 +92,13 @@ curl -X POST http://localhost:8000/groundstations \
 
 ### Satellites
 - `GET /satellites` List all satellites.
-- `POST /satellites/register` Register a satellite.
+- `POST /satellites` Register a satellite.
 - `PATCH /satellites/{norad_id}/` Update `s_name`.
 - `DELETE /satellites/{norad_id}` Delete a satellite. Use `?force=true` to bypass active-reservation checks.
 
 Example:
 ```bash
-curl -X POST http://localhost:8000/satellites/register \
+curl -X POST http://localhost:8000/satellites \
   -H 'Content-Type: application/json' \
   -d '{"norad_id":25544,"s_name":"ISS (ZARYA)"}'
 ```
