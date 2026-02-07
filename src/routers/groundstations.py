@@ -21,8 +21,8 @@ def list_gs():
             detail="Failed to retrieve ground stations."
         )
 
-
-@router.post("/groundstations/register", status_code=201)
+#add a groundstation
+@router.post("/groundstations", status_code=201)
 def register_gs(gs: GroundStation):
     try:
         lon = round(gs.lon, 5)

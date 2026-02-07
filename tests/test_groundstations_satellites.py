@@ -27,7 +27,7 @@ def _create_groundstation(client) -> int:
     alt = 1600.0 + (ms % 100) / 10
 
     response = client.post(
-        "/groundstations/register",
+        "/groundstations",
         json={"gs_code": gs_code, "lat": lat, "lon": lon, "alt": alt},
     )
     assert response.status_code == 201
