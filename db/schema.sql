@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS satellites (
     norad_id INTEGER NOT NULL UNIQUE,
     tle_line1 TEXT,
     tle_line2 TEXT,
-    tle_updated_at TIMESTAMP,
     date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 -- =========================
