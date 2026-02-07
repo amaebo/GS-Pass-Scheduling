@@ -28,11 +28,15 @@ def register_gs(gs: GroundStation):
         lon = round(gs.lon, 5)
         lat = round(gs.lat, 5)
         alt = round(gs.alt, 2)
+        status = gs.status.upper()
 
-        gs_db.insert_gs_manual(gs.gs_code, lon, lat, alt)
+        if status not in ("ACTIVE","INACTIVE"):
+            raise HTTPException(status_code=409, detail="Status must be 'ACTIVE' or 'INACTIVE'")
+
+        gs_db.insert_gs_manual(gs.gs_code, lon, lat, alt, status)
         return {
             "msg": "Ground station registered",
-            "Ground Station": {"gs_code": gs.gs_code, "lon": lon, "lat": lat, "alt": alt},
+            "Ground Station": {"gs_code": gs.gs_code, "lon": lon, "lat": lat, "alt": alt, "status": gs.status},
         }
     except sqlite3.IntegrityError:
         raise HTTPException(

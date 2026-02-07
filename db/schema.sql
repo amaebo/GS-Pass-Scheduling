@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS ground_stations (
     alt REAL NOT NULL,
     source TEXT NOT NULL,
     -- (MANUAL, AWS, SATNOGS etc.)
-    status TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ("ACTIVE","INACTIVE")) ,
     -- (ACTIVE/INACTIVE)
     date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (lat, lon)

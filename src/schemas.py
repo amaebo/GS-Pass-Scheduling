@@ -13,6 +13,7 @@ class GroundStation(BaseModel):
     lon: float
     lat: float
     alt: float
+    status: str = Field("ACTIVE")
 
 
 class Mission(BaseModel):

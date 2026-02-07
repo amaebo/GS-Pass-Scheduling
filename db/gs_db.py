@@ -3,13 +3,13 @@ import sqlite3
 from db.db_query import execute_row_id, execute_rowcount, fetch_all, fetch_one
 
 
-def insert_gs_manual(gs_code: str, lon: float, lat: float, alt: float) -> int:
+def insert_gs_manual(gs_code: str, lon: float, lat: float, alt: float, status: str) -> int:
     query= """
             INSERT INTO ground_stations(gs_code, lon, lat, alt, source, status) 
             VALUES (?,?,?,?,?,?);
         """
     try:
-        return execute_row_id(query, (gs_code, lon, lat, alt, "manual", "ACTIVE"))
+        return execute_row_id(query, (gs_code, lon, lat, alt, "manual", status))
     except sqlite3.Error:
         raise
 
