@@ -1,5 +1,5 @@
 import sqlite3
-from db.db_query import execute_row_id, fetch_all, fetch_one
+from db.db_query import execute_row_id, fetch_all, fetch_one, execute_rowcount
 
 
 def insert_new_satellite(norad_id: int, s_name: str) -> int:
@@ -52,3 +52,21 @@ def get_satellite_by_norad_id(norad_id: int):
         return fetch_one(query, (norad_id,))
     except sqlite3.Error:
         raise
+
+def sat_has_active_reservations(s_id: int):
+    query = """
+            SELECT 1
+            FROM reservations r
+            INNER JOIN predicted_passes p ON p.pass_id = r.pass_id
+            WHERE r.s_id = ?
+              AND r.cancelled_at IS NULL
+              AND p.end_time >= CURRENT_TIMESTAMP
+            LIMIT 1
+        """
+    return True if fetch_one(query, (s_id,)) else False
+
+def delete_satellite_by_s_id(s_id: int):
+    query = """
+            DELETE FROM satellites
+            WHERE s_id = ? """
+    return execute_rowcount(query,(s_id,))

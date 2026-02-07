@@ -212,3 +212,10 @@ def delete_reservations_by_gs_id(gs_id:int):
             WHERE gs_id = ?
              """
     return execute_rowcount(query,(gs_id,))
+
+def delete_reservations_by_s_id(s_id:int):
+    query = """
+            DELETE FROM reservations
+            WHERE s_id = ?
+             """
+    return execute_rowcount(query,(s_id,))
