@@ -9,6 +9,15 @@ FastAPI service for managing ground stations, satellites, missions, predicted pa
 - Schedule command sets per reservation.
 - Cleanup script to remove cancelled reservations tied to expired passes.
 
+## Tech Stack
+- Language: Python
+- API framework: FastAPI
+- Data store: SQLite
+- External API: N2YO (pass prediction source)
+- HTTP client: httpx
+- Validation: Pydantic
+- Testing: pytest
+
 ## Project layout
 - `src/main.py` FastAPI app entrypoint.
 - `src/routers/` API routes (groundstations, satellites, missions, passes, reservations, commands).
@@ -58,7 +67,7 @@ PY
 4. Run the API:
 
 ```bash
-fastapi fastapi dev src/main.py
+fastapi dev src.main:app
 ```
 
 The server will be available at `http://localhost:8000`.
