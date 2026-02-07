@@ -42,3 +42,26 @@ def init_db(
         raise
     finally:
         conn.close()
+
+
+def seed_db(
+    db_path: str | None = None,
+    seed_path: str | None = None
+) -> None:
+    """
+    Seed the database with dev data.
+    """
+    db_file = Path(db_path) if db_path else DB_PATH
+    seed_file = Path(seed_path) if seed_path else PROJECT_ROOT / "db" / "seed.sql"
+
+    seed_sql = seed_file.read_text(encoding="utf-8")
+
+    conn = db_connect(str(db_file))
+    try:
+        conn.executescript(seed_sql)
+        conn.commit()
+    except sqlite3.Error:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
