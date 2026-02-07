@@ -46,7 +46,8 @@ def register_gs(gs: GroundStation):
 # Update ground stations
 @router.patch("/groundstations/{gs_id}/")
 def update_gs(gs_id:int,gs_updates: GSUpdate):
-    if not gs_db.gs_exists_by_gs_id(gs_id):
+    gs = gs_db.get_gs_by_id(gs_id)
+    if not gs:
         raise HTTPException(status_code= 404, detail="Ground station not found")
     
     updates = {key: value for key, value in gs_updates.model_dump().items() if value is not None}
@@ -61,16 +62,28 @@ def update_gs(gs_id:int,gs_updates: GSUpdate):
         if status not in ("ACTIVE", "INACTIVE"):
             raise HTTPException(status_code=400, detail="Status must be 'ACTIVE' or 'INACTIVE'.")
         updates["status"] = status
+    deactivating = (
+        updates.get("status") == "INACTIVE" and gs["status"] != "INACTIVE"
+    )
     try:
         gs_db.update_gs(gs_id, updates)
+        cancelled = 0
+        deleted_passes = 0
+        if deactivating:
+            cancelled = gs_db.cancel_future_reservations_for_gs(gs_id)
+            deleted_passes = gs_db.delete_future_unreserved_passes_for_gs(gs_id)
     except sqlite3.IntegrityError:
         raise HTTPException(status_code=409, detail="gs_code or (lat,lon) coordinates already exist.")
     except sqlite3.Error:
         raise HTTPException(status_code=500, detail="Unable to update ground station.")
-    return{
+    payload = {
         "msg": "Ground stations updated",
         "ground station": dict(gs_db.get_gs_by_id(gs_id))
     }
+    if deactivating:
+        payload["reservations_cancelled"] = cancelled
+        payload["passes_deleted"] = deleted_passes
+    return payload
 #delete groundstation along with history of all gs reservations 
 @router.delete("/groundstations/{gs_id}")
 def delete_gs(gs_id: int, response: Response, force: bool = False):

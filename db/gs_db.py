@@ -101,6 +101,34 @@ def gs_exists_by_gs_id(gs_id: int):
             SELECT 1
             FROM ground_stations
             WHERE gs_id = ?
-        """
+    """
     return True if fetch_one(query, (gs_id,)) else False
+
+def cancel_future_reservations_for_gs(gs_id: int) -> int:
+    query = """
+            UPDATE reservations
+            SET cancelled_at = CURRENT_TIMESTAMP
+            WHERE gs_id = ?
+              AND cancelled_at IS NULL
+              AND pass_id IN (
+                SELECT pass_id
+                FROM predicted_passes
+                WHERE gs_id = ?
+                  AND end_time >= CURRENT_TIMESTAMP
+              )
+        """
+    return execute_rowcount(query, (gs_id, gs_id))
+
+def delete_future_unreserved_passes_for_gs(gs_id: int) -> int:
+    query = """
+            DELETE FROM predicted_passes
+            WHERE gs_id = ?
+              AND start_time >= CURRENT_TIMESTAMP
+              AND NOT EXISTS (
+                SELECT 1
+                FROM reservations r
+                WHERE r.pass_id = predicted_passes.pass_id
+              )
+        """
+    return execute_rowcount(query, (gs_id,))
     
