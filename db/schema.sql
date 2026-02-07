@@ -25,11 +25,6 @@ CREATE TABLE IF NOT EXISTS satellites (
     tle_line1 TEXT,
     tle_line2 TEXT,
     tle_updated_at TIMESTAMP,
-    mode TEXT,
-    -- (SAFE | NOMINAL | PAYLOAD)
-    health_status TEXT,
-    -- (OK | DEGRADED | UNKNOWN)
-    last_contact_time TIMESTAMP,
     date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 -- =========================
