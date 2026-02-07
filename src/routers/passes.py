@@ -27,6 +27,8 @@ def view_pass(norad_id: int, gs_id: int):
 
     if not gs:
         raise HTTPException(status_code=404, detail="Ground station not found.")
+    if gs["status"] != "ACTIVE":
+        raise HTTPException(status_code=409, detail="Ground station is inactive.")
     if not satellite:
         raise HTTPException(status_code=404, detail="Satellite not found.")
 
