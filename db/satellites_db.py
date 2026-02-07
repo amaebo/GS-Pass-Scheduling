@@ -22,7 +22,7 @@ def get_all_satellites(include_s_id: bool = False):
         
     else:
         query= """
-                SELECT s_name, norad_id, mode, health_status, date_added
+                SELECT s_name, norad_id, date_added
                 FROM satellites
             """
         
