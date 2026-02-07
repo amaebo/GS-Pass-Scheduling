@@ -138,6 +138,14 @@ def test_passes_missing_satellite(client):
     assert response.status_code == 404
 
 
+def test_passes_blocked_for_inactive_groundstation(client):
+    response = client.patch("/groundstations/1/", json={"status": "INACTIVE"})
+    assert response.status_code == 200
+
+    response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
+    assert response.status_code == 409
+
+
 def test_passes_n2yo_failure(client, monkeypatch):
     _clear_predicted_passes()
 

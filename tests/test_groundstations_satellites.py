@@ -286,6 +286,82 @@ def test_update_groundstation_status_normalized(client):
     updated = response.json()["ground station"]
     assert updated["status"] == "INACTIVE"
 
+def test_update_groundstation_inactive_cancels_reservations_and_deletes_passes(client):
+    gs_id = _create_groundstation(client)
+    now = datetime.now(timezone.utc)
+    reserved_pass_id = p_db.insert_n2yo_pass_return_id(
+        s_id=1,
+        gs_id=gs_id,
+        max_elevation=45.0,
+        duration=600,
+        start_time=_utc_ts(now + timedelta(hours=1)),
+        end_time=_utc_ts(now + timedelta(hours=2)),
+    )
+    assert reserved_pass_id is not None
+    unreserved_pass_id = p_db.insert_n2yo_pass_return_id(
+        s_id=1,
+        gs_id=gs_id,
+        max_elevation=35.0,
+        duration=500,
+        start_time=_utc_ts(now + timedelta(hours=3)),
+        end_time=_utc_ts(now + timedelta(hours=4)),
+    )
+    assert unreserved_pass_id is not None
+
+    reserve = client.post("/reservations", json={"pass_id": reserved_pass_id})
+    assert reserve.status_code == 200
+    r_id = reserve.json()["Reservation"]["r_id"]
+
+    response = client.patch(
+        f"/groundstations/{gs_id}/",
+        json={"status": "INACTIVE"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload.get("reservations_cancelled") == 1
+    assert payload.get("passes_deleted") == 1
+
+    reservations = client.get("/reservations", params={"include_cancelled": True})
+    assert reservations.status_code == 200
+    rows = reservations.json()["reservations"]
+    match = next((r for r in rows if r["r_id"] == r_id), None)
+    assert match is not None
+    assert match["status"] == "CANCELLED"
+
+    conn = db_init.db_connect()
+    try:
+        remaining = conn.execute(
+            "SELECT pass_id FROM predicted_passes WHERE gs_id = ?",
+            (gs_id,),
+        ).fetchall()
+        remaining_ids = {row["pass_id"] for row in remaining}
+        assert remaining_ids == {reserved_pass_id}
+    finally:
+        conn.close()
+
+
+def test_reservation_blocked_for_inactive_groundstation(client):
+    gs_id = _create_groundstation(client)
+    response = client.patch(
+        f"/groundstations/{gs_id}/",
+        json={"status": "INACTIVE"},
+    )
+    assert response.status_code == 200
+
+    now = datetime.now(timezone.utc)
+    pass_id = p_db.insert_n2yo_pass_return_id(
+        s_id=1,
+        gs_id=gs_id,
+        max_elevation=45.0,
+        duration=600,
+        start_time=_utc_ts(now + timedelta(hours=1)),
+        end_time=_utc_ts(now + timedelta(hours=2)),
+    )
+    assert pass_id is not None
+
+    reserve = client.post("/reservations", json={"pass_id": pass_id})
+    assert reserve.status_code == 409
+
 
 def test_update_groundstation_rejects_location_changes(client):
     gs_id = _create_groundstation(client)
