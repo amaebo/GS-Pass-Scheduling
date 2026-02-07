@@ -21,7 +21,7 @@ def list_satellites():
         )
 
 
-@router.post("/satellites/register", status_code=201)
+@router.post("/satellites", status_code=201)
 def register_satellite(satellite: Satellite):
     try:
         sat_db.insert_new_satellite(satellite.norad_id, satellite.s_name)

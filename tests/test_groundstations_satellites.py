@@ -94,7 +94,7 @@ def _create_satellite(client) -> int:
     ms = int(time.time() * 1000)
     norad_id = 70000 + (ms % 20000)
     payload = {"norad_id": norad_id, "s_name": f"TEST SAT {ms}"}
-    response = client.post("/satellites/register", json=payload)
+    response = client.post("/satellites", json=payload)
     assert response.status_code == 201
     return norad_id
 
@@ -121,7 +121,7 @@ def test_list_satellites_seeded(client):
 
 def test_register_satellite_then_list(client):
     payload = {"norad_id": 99999, "s_name": "TEST SAT"}
-    response = client.post("/satellites/register", json=payload)
+    response = client.post("/satellites", json=payload)
     assert response.status_code == 201
 
     response = client.get("/satellites")
@@ -135,10 +135,10 @@ def test_register_satellite_then_list(client):
 
 def test_register_satellite_duplicate_norad_id(client):
     payload = {"norad_id": 88888, "s_name": "DUP TEST SAT"}
-    first = client.post("/satellites/register", json=payload)
+    first = client.post("/satellites", json=payload)
     assert first.status_code == 201
 
-    second = client.post("/satellites/register", json=payload)
+    second = client.post("/satellites", json=payload)
     assert second.status_code == 409
 
 
