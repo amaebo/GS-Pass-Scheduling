@@ -25,7 +25,12 @@ class MissionUpdate(BaseModel):
     mission_name: str | None = Field(None, min_length=1)
     owner: str | None = None
     priority: str | None = None
-
+class GSUpdate(BaseModel):
+    gs_code: str | None = Field(None, min_length=3, max_length=50, pattern=GS_CODE_REGEX) 
+    lon: float | None = None
+    lat: float | None = None
+    alt: float | None = None
+    status: str | None = None
 class ReservationCreate(BaseModel):
     pass_id: int = Field(..., gt=0)
     mission_id: int | None = Field(None, gt=0)

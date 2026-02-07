@@ -1,5 +1,6 @@
 import sqlite3
 from fastapi import APIRouter, HTTPException
+from src.schemas import GSUpdate
 
 import db.gs_db as gs_db
 import db.reservations_db as r_db
@@ -39,6 +40,25 @@ def register_gs(gs: GroundStation):
             detail="Ground Station already registered (duplicate gs_code or coordinates)."
         )
 
+# Update ground stations
+@router.patch("/groundstations/{gs_id}/")
+def update_gs(gs_id:int,gs_updates: GSUpdate):
+    if not gs_db.gs_exists_by_gs_id(gs_id):
+        raise HTTPException(status_code= 404, detail="Ground station not found")
+    
+    all_updates = gs_updates.model_dump()
+    # Filter update items with actual values
+    filtered_updates = {key: value for key, value in all_updates.items() if value is not None}
+    try:
+        gs_db.update_gs(gs_id,filtered_updates)
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=409, detail="gs_code or (lat,lon) coordinates already exist.")
+    except sqlite3.Error:
+        raise HTTPException(status_code=500, detail="Unable to update ground station.")
+    return{
+        "msg": "Ground stations updated",
+        "ground station": dict(gs_db.get_gs_by_id(gs_id))
+    }
 #delete groundstation along with history of all gs reservations 
 @router.delete("/groundstations/{gs_id}")
 def delete_gs(gs_id: int, force: bool = False):
