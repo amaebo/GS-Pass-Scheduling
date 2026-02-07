@@ -1,4 +1,5 @@
 import sqlite3
+from db.db_init import db_connect
 from db.db_query import execute_row_id, fetch_all, fetch_one, execute_rowcount
 
 
@@ -70,6 +71,26 @@ def delete_satellite_by_s_id(s_id: int):
             DELETE FROM satellites
             WHERE s_id = ? """
     return execute_rowcount(query,(s_id,))
+
+def delete_satellite_and_reservations(s_id: int) -> tuple[int, int]:
+    conn = db_connect()
+    try:
+        reservations_cur = conn.execute(
+            "DELETE FROM reservations WHERE s_id = ?",
+            (s_id,),
+        )
+        satellite_cur = conn.execute(
+            "DELETE FROM satellites WHERE s_id = ?",
+            (s_id,),
+        )
+        conn.commit()
+        return reservations_cur.rowcount, satellite_cur.rowcount
+    except sqlite3.Error:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
 def update_satellite(s_id: int, updates: dict):
     if not updates:
         return 0
