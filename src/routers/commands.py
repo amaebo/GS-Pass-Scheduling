@@ -12,4 +12,4 @@ def view_commands():
 
         return {"commands": [dict(command) for command in rows]}
     except sqlite3.Error:
-        HTTPException(status_code= 500, detail= "Failed to retrieve commands")
+        raise HTTPException(status_code=500, detail="Failed to retrieve commands")
