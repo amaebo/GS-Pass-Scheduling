@@ -96,6 +96,61 @@ def update_gs(gs_id: int, updates: dict):
                 """
     return execute_rowcount(query, tuple(params))
 
+
+def update_gs_with_deactivation(gs_id: int, updates: dict) -> tuple[int, int, int]:
+    if not updates:
+        return 0, 0, 0
+
+    set_clause = []
+    params = []
+
+    for col, value in updates.items():
+        clause = f"{col} = ?"
+        set_clause.append(clause)
+        params.append(value)
+
+    params.append(gs_id)
+    update_query = f"""
+                UPDATE ground_stations
+                SET {",".join(set_clause)}
+                WHERE gs_id = ?
+                """
+    cancel_query = """
+            UPDATE reservations
+            SET cancelled_at = CURRENT_TIMESTAMP
+            WHERE gs_id = ?
+              AND cancelled_at IS NULL
+              AND pass_id IN (
+                SELECT pass_id
+                FROM predicted_passes
+                WHERE gs_id = ?
+                  AND end_time >= CURRENT_TIMESTAMP
+              )
+        """
+    delete_query = """
+            DELETE FROM predicted_passes
+            WHERE gs_id = ?
+              AND start_time >= CURRENT_TIMESTAMP
+              AND NOT EXISTS (
+                SELECT 1
+                FROM reservations r
+                WHERE r.pass_id = predicted_passes.pass_id
+              )
+        """
+
+    conn = db_connect()
+    try:
+        update_cur = conn.execute(update_query, tuple(params))
+        cancel_cur = conn.execute(cancel_query, (gs_id, gs_id))
+        delete_cur = conn.execute(delete_query, (gs_id,))
+        conn.commit()
+        return update_cur.rowcount, cancel_cur.rowcount, delete_cur.rowcount
+    except sqlite3.Error:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
 def gs_exists_by_gs_id(gs_id: int):
     query = """
             SELECT 1

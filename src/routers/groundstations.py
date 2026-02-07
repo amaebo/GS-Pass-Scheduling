@@ -66,12 +66,12 @@ def update_gs(gs_id:int,gs_updates: GSUpdate):
         updates.get("status") == "INACTIVE" and gs["status"] != "INACTIVE"
     )
     try:
-        gs_db.update_gs(gs_id, updates)
         cancelled = 0
         deleted_passes = 0
         if deactivating:
-            cancelled = gs_db.cancel_future_reservations_for_gs(gs_id)
-            deleted_passes = gs_db.delete_future_unreserved_passes_for_gs(gs_id)
+            _, cancelled, deleted_passes = gs_db.update_gs_with_deactivation(gs_id, updates)
+        else:
+            gs_db.update_gs(gs_id, updates)
     except sqlite3.IntegrityError:
         raise HTTPException(status_code=409, detail="gs_code or (lat,lon) coordinates already exist.")
     except sqlite3.Error:
