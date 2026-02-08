@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 
-import httpx
 import pytest
 
 import db.passes_db as p_db
@@ -23,12 +22,40 @@ def _clear_predicted_passes():
     finally:
         conn.close()
 
+def _update_satellite_tle(s_id: int, line1: str, line2: str, updated_at: str):
+    conn = db_init.db_connect()
+    try:
+        conn.execute(
+            "UPDATE satellites SET tle_line1 = ?, tle_line2 = ?, tle_updated_at = ? WHERE s_id = ?",
+            (line1, line2, updated_at, s_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+def _insert_reservation(pass_id: int, gs_id: int, s_id: int):
+    conn = db_init.db_connect()
+    try:
+        conn.execute(
+            "INSERT INTO reservations (pass_id, gs_id, s_id) VALUES (?, ?, ?)",
+            (pass_id, gs_id, s_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
 
 def test_passes_refresh_when_no_cache(client, monkeypatch):
     _clear_predicted_passes()
     calls = {"count": 0}
 
     now = datetime.now(timezone.utc)
+    _update_satellite_tle(
+        s_id=1,
+        line1="1 25544U 98067A   26029.50000000  .00010000  00000-0  18000-3 0  9991",
+        line2="2 25544  51.6400 120.0000 0005000  20.0000  40.0000 15.50000000    10",
+        updated_at=_utc_ts(now),
+    )
     fake_passes = [
         {
             "norad_id": 25544,
@@ -43,7 +70,7 @@ def test_passes_refresh_when_no_cache(client, monkeypatch):
         calls["count"] += 1
         return fake_passes
 
-    monkeypatch.setattr(passes_module, "get_passes_from_n2yo", fake_get_passes)
+    monkeypatch.setattr(passes_module, "get_pass_predictions", fake_get_passes)
 
     response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
     assert response.status_code == 200
@@ -54,19 +81,25 @@ def test_passes_refresh_when_no_cache(client, monkeypatch):
 def test_passes_no_refresh_when_cache_fresh(client, monkeypatch):
     _clear_predicted_passes()
     now = datetime.now(timezone.utc)
+    _update_satellite_tle(
+        s_id=1,
+        line1="1 25544U 98067A   26029.50000000  .00010000  00000-0  18000-3 0  9991",
+        line2="2 25544  51.6400 120.0000 0005000  20.0000  40.0000 15.50000000    10",
+        updated_at=_utc_ts(now),
+    )
     p_db.insert_n2yo_pass_return_id(
         s_id=1,
         gs_id=1,
         max_elevation=45.0,
         duration=600,
         start_time=_utc_ts(now + timedelta(hours=1)),
-        end_time=_utc_ts(now + timedelta(hours=13)),
+        end_time=_utc_ts(now + timedelta(hours=26)),
     )
 
     def fail_get_passes(*args, **kwargs):
-        pytest.fail("N2YO should not be called when cache is fresh")
+        pytest.fail("Predictions should not be called when cache is fresh")
 
-    monkeypatch.setattr(passes_module, "get_passes_from_n2yo", fail_get_passes)
+    monkeypatch.setattr(passes_module, "get_pass_predictions", fail_get_passes)
 
     response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
     assert response.status_code == 200
@@ -75,6 +108,12 @@ def test_passes_no_refresh_when_cache_fresh(client, monkeypatch):
 def test_passes_return_only_future(client, monkeypatch):
     _clear_predicted_passes()
     now = datetime.now(timezone.utc)
+    _update_satellite_tle(
+        s_id=1,
+        line1="1 25544U 98067A   26029.50000000  .00010000  00000-0  18000-3 0  9991",
+        line2="2 25544  51.6400 120.0000 0005000  20.0000  40.0000 15.50000000    10",
+        updated_at=_utc_ts(now),
+    )
     p_db.insert_n2yo_pass_return_id(
         s_id=1,
         gs_id=1,
@@ -89,13 +128,13 @@ def test_passes_return_only_future(client, monkeypatch):
         max_elevation=45.0,
         duration=600,
         start_time=_utc_ts(now + timedelta(hours=1)),
-        end_time=_utc_ts(now + timedelta(hours=13)),
+        end_time=_utc_ts(now + timedelta(hours=26)),
     )
 
     def fail_get_passes(*args, **kwargs):
-        pytest.fail("N2YO should not be called for this test")
+        pytest.fail("Predictions should not be called for this test")
 
-    monkeypatch.setattr(passes_module, "get_passes_from_n2yo", fail_get_passes)
+    monkeypatch.setattr(passes_module, "get_pass_predictions", fail_get_passes)
 
     response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
     assert response.status_code == 200
@@ -106,19 +145,25 @@ def test_passes_return_only_future(client, monkeypatch):
 def test_passes_response_fields(client, monkeypatch):
     _clear_predicted_passes()
     now = datetime.now(timezone.utc)
+    _update_satellite_tle(
+        s_id=1,
+        line1="1 25544U 98067A   26029.50000000  .00010000  00000-0  18000-3 0  9991",
+        line2="2 25544  51.6400 120.0000 0005000  20.0000  40.0000 15.50000000    10",
+        updated_at=_utc_ts(now),
+    )
     p_db.insert_n2yo_pass_return_id(
         s_id=1,
         gs_id=1,
         max_elevation=45.0,
         duration=600,
         start_time=_utc_ts(now + timedelta(hours=1)),
-        end_time=_utc_ts(now + timedelta(hours=13)),
+        end_time=_utc_ts(now + timedelta(hours=26)),
     )
 
     def fail_get_passes(*args, **kwargs):
-        pytest.fail("N2YO should not be called for this test")
+        pytest.fail("Predictions should not be called for this test")
 
-    monkeypatch.setattr(passes_module, "get_passes_from_n2yo", fail_get_passes)
+    monkeypatch.setattr(passes_module, "get_pass_predictions", fail_get_passes)
 
     response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
     assert response.status_code == 200
@@ -146,31 +191,105 @@ def test_passes_blocked_for_inactive_groundstation(client):
     assert response.status_code == 409
 
 
-def test_passes_n2yo_failure(client, monkeypatch):
+def test_tle_refresh_when_stale(client, monkeypatch):
     _clear_predicted_passes()
+    now = datetime.now(timezone.utc)
+    stale_time = _utc_ts(now - timedelta(days=2))
+    _update_satellite_tle(
+        s_id=1,
+        line1="OLD1",
+        line2="OLD2",
+        updated_at=stale_time,
+    )
 
-    def raise_httpx(*args, **kwargs):
-        request = httpx.Request("GET", "https://example.com")
-        response = httpx.Response(502, request=request)
-        raise httpx.HTTPStatusError("Bad gateway", request=request, response=response)
+    calls = {"count": 0}
 
-    monkeypatch.setattr(passes_module, "get_passes_from_n2yo", raise_httpx)
+    def fake_get_tle(*args, **kwargs):
+        calls["count"] += 1
+        return [
+            "1 25544U 98067A   26029.50000000  .00010000  00000-0  18000-3 0  9991",
+            "2 25544  51.6400 120.0000 0005000  20.0000  40.0000 15.50000000    10",
+        ]
+
+    def fake_get_passes(*args, **kwargs):
+        return []
+
+    monkeypatch.setattr(passes_module, "get_tle", fake_get_tle)
+    monkeypatch.setattr(passes_module, "get_pass_predictions", fake_get_passes)
 
     response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
-    assert response.status_code == 502
+    assert response.status_code == 200
+    assert calls["count"] == 1
 
 
-def test_passes_n2yo_request_error(client, monkeypatch):
+def test_tle_no_refresh_when_fresh(client, monkeypatch):
     _clear_predicted_passes()
+    now = datetime.now(timezone.utc)
+    _update_satellite_tle(
+        s_id=1,
+        line1="1 25544U 98067A   26029.50000000  .00010000  00000-0  18000-3 0  9991",
+        line2="2 25544  51.6400 120.0000 0005000  20.0000  40.0000 15.50000000    10",
+        updated_at=_utc_ts(now),
+    )
+    p_db.insert_n2yo_pass_return_id(
+        s_id=1,
+        gs_id=1,
+        max_elevation=45.0,
+        duration=600,
+        start_time=_utc_ts(now + timedelta(hours=1)),
+        end_time=_utc_ts(now + timedelta(hours=26)),
+    )
 
-    def raise_request_error(*args, **kwargs):
-        request = httpx.Request("GET", "https://example.com")
-        raise httpx.RequestError("boom", request=request)
+    def fail_get_tle(*args, **kwargs):
+        pytest.fail("CelesTrak should not be called when TLE is fresh")
 
-    monkeypatch.setattr(passes_module, "get_passes_from_n2yo", raise_request_error)
+    def fail_get_passes(*args, **kwargs):
+        pytest.fail("Predictions should not be called when cache is fresh")
+
+    monkeypatch.setattr(passes_module, "get_tle", fail_get_tle)
+    monkeypatch.setattr(passes_module, "get_pass_predictions", fail_get_passes)
 
     response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
-    assert response.status_code == 502
+    assert response.status_code == 200
+
+
+def test_claimable_filtering_excludes_active_reservations(client, monkeypatch):
+    _clear_predicted_passes()
+    now = datetime.now(timezone.utc)
+    _update_satellite_tle(
+        s_id=1,
+        line1="1 25544U 98067A   26029.50000000  .00010000  00000-0  18000-3 0  9991",
+        line2="2 25544  51.6400 120.0000 0005000  20.0000  40.0000 15.50000000    10",
+        updated_at=_utc_ts(now),
+    )
+    reserved_id = p_db.insert_n2yo_pass_return_id(
+        s_id=1,
+        gs_id=1,
+        max_elevation=45.0,
+        duration=600,
+        start_time=_utc_ts(now + timedelta(hours=1)),
+        end_time=_utc_ts(now + timedelta(hours=25)),
+    )
+    open_id = p_db.insert_n2yo_pass_return_id(
+        s_id=1,
+        gs_id=1,
+        max_elevation=30.0,
+        duration=400,
+        start_time=_utc_ts(now + timedelta(hours=3)),
+        end_time=_utc_ts(now + timedelta(hours=26)),
+    )
+    _insert_reservation(reserved_id, gs_id=1, s_id=1)
+
+    def fail_get_passes(*args, **kwargs):
+        pytest.fail("Predictions should not be called for this test")
+
+    monkeypatch.setattr(passes_module, "get_pass_predictions", fail_get_passes)
+
+    response = client.get("/passes", params={"norad_id": 25544, "gs_id": 1})
+    assert response.status_code == 200
+    ids = {p["pass_id"] for p in response.json()["passes"]}
+    assert reserved_id not in ids
+    assert open_id in ids
 
 
 def test_delete_unreserved_expired_passes_keeps_active():

@@ -16,6 +16,11 @@ def _clear_reservation_data():
         conn.execute("DELETE FROM reservation_commands;")
         conn.execute("DELETE FROM reservations;")
         conn.execute("DELETE FROM predicted_passes;")
+        now = datetime.now(timezone.utc)
+        conn.execute(
+            "UPDATE satellites SET tle_updated_at = ? WHERE s_id = 1",
+            (_utc_ts(now),),
+        )
         conn.commit()
     finally:
         conn.close()
@@ -24,7 +29,7 @@ def _clear_reservation_data():
 def _create_future_pass() -> int:
     now = datetime.now(timezone.utc)
     start_time = _utc_ts(now + timedelta(hours=1))
-    end_time = _utc_ts(now + timedelta(hours=2))
+    end_time = _utc_ts(now + timedelta(hours=26))
     pass_id = p_db.insert_n2yo_pass_return_id(
         s_id=1,
         gs_id=1,
