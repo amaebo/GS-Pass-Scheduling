@@ -1,10 +1,9 @@
 import logging
-import os
 
 
 def setup_logging(level: int | None = None) -> None:
     if level is None:
-        level_name = os.getenv("LOG_LEVEL", "INFO").upper()
+        level_name = "INFO"
         level = {
             "CRITICAL": logging.CRITICAL,
             "ERROR": logging.ERROR,
