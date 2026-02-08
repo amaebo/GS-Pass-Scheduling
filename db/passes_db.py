@@ -1,13 +1,14 @@
 from db.db_query import execute_row_id, execute_rowcount, fetch_one, fetch_all
 
 
-def insert_n2yo_pass_return_id(
+def insert_predicted_pass_return_id(
     s_id: int,
     gs_id: int,
     max_elevation: float,
     duration: int,
     start_time: str,
     end_time: str,
+    source: str,
 ) -> int | None:
     # IGNORE keyword in query handles duplicate entries by ignoring them.
     query = """
@@ -24,12 +25,31 @@ def insert_n2yo_pass_return_id(
         """
     rowcount = execute_rowcount(
         query,
-        (s_id, gs_id, max_elevation, duration, start_time, end_time, "n2yo"),
+        (s_id, gs_id, max_elevation, duration, start_time, end_time, source),
     )
     if not rowcount:
         return None
     row = get_pass_id(gs_id, s_id, start_time, end_time)
     return row["pass_id"] if row else None
+
+
+def insert_n2yo_pass_return_id(
+    s_id: int,
+    gs_id: int,
+    max_elevation: float,
+    duration: int,
+    start_time: str,
+    end_time: str,
+) -> int | None:
+    return insert_predicted_pass_return_id(
+        s_id=s_id,
+        gs_id=gs_id,
+        max_elevation=max_elevation,
+        duration=duration,
+        start_time=start_time,
+        end_time=end_time,
+        source="n2yo",
+    )
 
 
 def get_latest_pass_end_time(gs_id: int, s_id: int):

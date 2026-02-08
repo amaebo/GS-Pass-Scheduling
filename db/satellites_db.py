@@ -109,3 +109,12 @@ def update_satellite(s_id: int, updates: dict):
             WHERE s_id = ?
         """
     return execute_rowcount(query, tuple(params))
+
+
+def update_satellite_tle(s_id: int, tle_line1: str, tle_line2: str, tle_updated_at: str) -> int:
+    query = """
+            UPDATE satellites
+            SET tle_line1 = ?, tle_line2 = ?, tle_updated_at = ?
+            WHERE s_id = ?
+        """
+    return execute_rowcount(query, (tle_line1, tle_line2, tle_updated_at, s_id))
