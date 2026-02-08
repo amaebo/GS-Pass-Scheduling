@@ -1,10 +1,18 @@
+"""
+ARCHIVED: N2YO pass prediction client.
+
+Replaced by local pass prediction using CelesTrak TLE + PyOrbital.
+This module is kept only for historical reference and is not used at runtime.
+"""
+
 import httpx
 import logging
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
 
-from src.core.config import N2YO_BASE_URL, N2YO_API_KEY
+N2YO_API_KEY = None
+N2YO_BASE_URL = None
 
 logger = logging.getLogger("n2yo_service")
 
