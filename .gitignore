@@ -213,3 +213,4 @@ Ground System (SQLite).session.sql
 ground_system.db-journal
 data/ground_system.db-wal
 data/ground_system.db-shm
+.DS_Store
