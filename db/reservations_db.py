@@ -194,28 +194,3 @@ def cancel_reservation_by_r_id(r_id: int):
             WHERE r_id = ?
         """
     return execute_rowcount(query, (r_id,))
-
-def delete_cancelled_expired_passes():
-    query = """
-            DELETE FROM reservations
-            WHERE cancelled_at IS NOT NULL
-                AND r_id IN (SELECT r_id
-                            FROM reservations
-                            INNER JOIN predicted_passes ON reservations.pass_id= predicted_passes.pass_id
-                            WHERE end_time < CURRENT_TIMESTAMP)
-            """
-    return execute_rowcount(query)
-
-def delete_reservations_by_gs_id(gs_id:int):
-    query = """
-            DELETE FROM reservations
-            WHERE gs_id = ?
-             """
-    return execute_rowcount(query,(gs_id,))
-
-def delete_reservations_by_s_id(s_id:int):
-    query = """
-            DELETE FROM reservations
-            WHERE s_id = ?
-             """
-    return execute_rowcount(query,(s_id,))

@@ -81,13 +81,6 @@ def get_claimable_passes(s_id:int, gs_id:int):
         """
     return fetch_all(query, (s_id, gs_id))
 
-def delete_pass_by_pass_id(pass_id: int):
-    query = """
-            DELETE FROM predicted_passes
-            WHERE pass_id = ?
-        """
-    return execute_rowcount(query, (pass_id,))
-
 def delete_unreserved_expired_passes():
     query = """
             DELETE FROM predicted_passes
@@ -109,14 +102,6 @@ def get_pass_id (gs_id: int, s_id: int, start_time: str, end_time: str):
             WHERE gs_id = ? and s_id = ? and start_time = ? and end_time = ?
         """
     return fetch_one(query, (gs_id, s_id, start_time, end_time))
-
-def get_all_expired_passes():
-    query = """
-            SELECT *
-            FROM predicted_passes
-            WHERE start_time < CURRENT_TIMESTAMP
-        """
-    return fetch_all(query)
 
 
 def get_pass_from_pass_id (pass_id: int):

@@ -66,12 +66,6 @@ def sat_has_active_reservations(s_id: int):
         """
     return True if fetch_one(query, (s_id,)) else False
 
-def delete_satellite_by_s_id(s_id: int):
-    query = """
-            DELETE FROM satellites
-            WHERE s_id = ? """
-    return execute_rowcount(query,(s_id,))
-
 def delete_satellite_and_reservations(s_id: int) -> tuple[int, int]:
     conn = db_connect()
     try:
