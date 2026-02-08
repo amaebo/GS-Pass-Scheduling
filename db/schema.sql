@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS satellites (
     norad_id INTEGER NOT NULL UNIQUE,
     tle_line1 TEXT,
     tle_line2 TEXT,
+    tle_updated_at TIMESTAMP,
     date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 -- =========================
@@ -69,7 +70,7 @@ CREATE TABLE IF NOT EXISTS predicted_passes (
     max_elevation REAL NOT NULL,
     duration INTEGER NOT NULL,
     source TEXT NOT NULL,
-    -- ('n2yo'|'skyfield')
+    -- ('n2yo'|'pyorbital')
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (gs_id) REFERENCES ground_stations(gs_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (s_id) REFERENCES satellites(s_id) ON DELETE CASCADE ON UPDATE CASCADE,
