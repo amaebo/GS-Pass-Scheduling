@@ -1,11 +1,11 @@
 # GS-Pass-Scheduling
 
-FastAPI service for managing ground stations, satellites, missions, predicted passes, and pass reservations. Pass predictions are cached in SQLite and refreshed from the N2YO API when stale.
+FastAPI service for managing ground stations, satellites, missions, predicted passes, and pass reservations. Pass predictions are cached in SQLite and refreshed from CelesTrak TLE data when stale, then computed locally with `pyorbital`.
 
 ## Highlights
 - Register and manage ground stations and satellites.
 - Create missions and attach satellites to missions.
-- Fetch and cache predicted passes (N2YO-backed) and claim them via reservations.
+- Fetch and cache predicted passes (CelesTrak TLE + `pyorbital`) and claim them via reservations.
 - Schedule command sets per reservation.
 - Cleanup script to remove cancelled reservations tied to expired passes.
 
@@ -13,7 +13,8 @@ FastAPI service for managing ground stations, satellites, missions, predicted pa
 - Language: Python
 - API framework: FastAPI
 - Data store: SQLite
-- External API: N2YO (pass prediction source)
+- External API: CelesTrak (TLE source)
+- Orbital prediction: pyorbital
 - HTTP client: httpx
 - Validation: Pydantic
 - Testing: pytest
@@ -29,13 +30,11 @@ FastAPI service for managing ground stations, satellites, missions, predicted pa
 
 ## Quick start
 1. Create a virtual environment and install dependencies.
-   - Recommended: `pip install "fastapi[standard]"`
-     - Includes Uvicorn for running the API.
-   - Additional requirements used by this project: `httpx`, `python-dotenv` (for `.env`), `pytest` (tests).
+   - Recommended: `pip install "fastapi[standard]" httpx pyorbital pydantic`
+     - Includes Uvicorn and the `fastapi` CLI for running the API.
+   - Additional requirements used by this project: `pytest` (tests).
 
-2. Configure environment variables in `.env` (see the next section).
-
-3. Initialize the SQLite database (required), and optionally seed it (recommended for local dev):
+2. Initialize the SQLite database (required), and optionally seed it (recommended for local dev):
 
 ```bash
 python -c "from db.db_init import init_db; init_db()"
@@ -64,23 +63,13 @@ finally:
 PY
 ```
 
-4. Run the API:
+3. Run the API:
 
 ```bash
-fastapi dev src.main:app
+fastapi dev src/main.py
 ```
 
 The server will be available at `http://localhost:8000`.
-
-## Environment
-Configuration is loaded from `.env` at the repo root.
-
-Required:
-- `N2YO_API_KEY` N2YO API key.
-- `N2YO_API_BASE_URL` N2YO base URL, for example `https://api.n2yo.com/rest/v1/satellite/`.
-
-Optional:
-- `LOG_LEVEL` (default: `INFO`).
 
 ## API overview
 
@@ -130,7 +119,7 @@ curl -X POST http://localhost:8000/missions/create \
 
 ### Passes
 - `GET /passes?norad_id={norad_id}&gs_id={gs_id}`
-  - Fetches predicted passes from cache, refreshes from N2YO if stale, and returns claimable future passes.
+  - Fetches predicted passes from cache, refreshes from CelesTrak if stale, and returns claimable future passes.
 
 Example:
 ```bash
