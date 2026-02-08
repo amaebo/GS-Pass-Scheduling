@@ -1,5 +1,8 @@
 # Change Notes
 
+## 2026-02-08
+- Replaced two unused pass indexes with a composite index matching pass lookup patterns. `db/schema.sql`
+
 ## 2026-01-24
 - Added basic API tests with FastAPI `TestClient`. `tests/test_api.py`
 - Added `src/__init__.py` so `src` is a package. `src/__init__.py`

@@ -112,8 +112,7 @@ CREATE TABLE IF NOT EXISTS reservation_commands (
 -- Indexes
 -- =========================
 -- Pass prediction queries
-CREATE INDEX IF NOT EXISTS idx_passes_by_station_time ON predicted_passes (gs_id, start_time);
-CREATE INDEX IF NOT EXISTS idx_passes_by_sat_time ON predicted_passes (s_id, start_time);
+CREATE INDEX IF NOT EXISTS idx_passes_by_gs_sat_start ON predicted_passes (gs_id, s_id, start_time);
 -- Reservation queries
 CREATE INDEX IF NOT EXISTS idx_reservations_by_mission ON reservations (mission_id, created_at);
 -- Fast lookup / joins by pass_id
